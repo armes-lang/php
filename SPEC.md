@@ -2,10 +2,10 @@
 
 This file records the PHP implementation's formal behavior and language-specific details. The canonical shared documentation is:
 
-- [Core Concepts](../docs/CORE-CONCEPTS.md) for the processing model and five node kinds.
-- [Source Commands](../docs/SOURCE-COMMANDS.md) for the complete portable command catalog.
-- [Extending Abstract](../docs/EXTENDING.md) for supported and closed public extension boundaries.
-- [Feature Parity](../FEATURES.md) for differences between PHP and TypeScript.
+- [Core Concepts](../../../docs/CORE-CONCEPTS.md) for the processing model and five node kinds.
+- [Source Commands](../../../docs/SOURCE-COMMANDS.md) for the complete portable command catalog.
+- [Extending Abstract](../../../docs/EXTENDING.md) for supported and closed public extension boundaries.
+- [Feature Parity](../../../FEATURES.md) for differences between PHP and TypeScript.
 
 When this file and the shared command catalog overlap, the shared catalog defines portable source syntax and this file defines PHP implementation behavior.
 
@@ -57,7 +57,7 @@ Bare names stay user-owned. PHP does not interpret `eq`, `and`, `int`, `logic:eq
 
 ## Internal Commands
 
-The portable command set and aliases are defined in [Source Commands](../docs/SOURCE-COMMANDS.md).
+The portable command set and aliases are defined in [Source Commands](../../../docs/SOURCE-COMMANDS.md).
 
 The source-to-node boundary is significant:
 
@@ -227,7 +227,7 @@ Built-in registered targets are HTML, JSX, and XML. YAML, TOML, and Pkl helpers 
 
 `RenderTarget` pairs `MapperInterface` and `EmitterInterface`. `withRenderTarget()` replaces or adds a named target immutably. Element mapping is target-specific: changing an HTML tag does not change JSX output.
 
-Public target extensions are documented in [Extending Abstract](../docs/EXTENDING.md). They do not add source commands or runtime evaluation.
+Public target extensions are documented in [Extending Abstract](../../../docs/EXTENDING.md). They do not add source commands or runtime evaluation.
 
 ## Strict And Loose Contracts
 

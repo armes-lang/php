@@ -4,10 +4,10 @@ This package is the PHP implementation of Abstract. It parses Abstract source in
 
 Start with the shared documentation if Abstract is new to you:
 
-- [Core Concepts](../docs/CORE-CONCEPTS.md): the parser, node, resolver, mapper, and emitter pipeline.
-- [Source Commands](../docs/SOURCE-COMMANDS.md): every built-in command, preferred spelling, alias, result, and constraint.
-- [Extending Abstract](../docs/EXTENDING.md): supported custom mappers, emitters, render targets, and external formats.
-- [Feature Parity](../FEATURES.md): PHP and TypeScript support compared.
+- [Core Concepts](../../../docs/CORE-CONCEPTS.md): the parser, node, resolver, mapper, and emitter pipeline.
+- [Source Commands](../../../docs/SOURCE-COMMANDS.md): every built-in command, preferred spelling, alias, result, and constraint.
+- [Extending Abstract](../../../docs/EXTENDING.md): supported custom mappers, emitters, render targets, and external formats.
+- [Feature Parity](../../../FEATURES.md): PHP and TypeScript support compared.
 
 ## Index
 
@@ -102,7 +102,7 @@ $resolved = $core->resolve($tree, ['order' => ['total' => 125]]);
 $html = $core->renderHtml($tree, ['order' => ['total' => 125]]);
 ```
 
-`sourceJson()` and `sourceAml()` do not evaluate conditions or loops. `treeJson()` does not convert back to tag-key source. See [Source Emission And Rendering](../docs/CORE-CONCEPTS.md#source-emission-and-rendering) for the conceptual difference.
+`sourceJson()` and `sourceAml()` do not evaluate conditions or loops. `treeJson()` does not convert back to tag-key source. See [Source Emission And Rendering](../../../docs/CORE-CONCEPTS.md#source-emission-and-rendering) for the conceptual difference.
 
 ## Parsing
 
@@ -129,7 +129,7 @@ Normal keys become Elements. Primitive values become inferred Values. Internal c
 }
 ```
 
-The complete grammar is maintained in the [Source Commands](../docs/SOURCE-COMMANDS.md), not duplicated here.
+The complete grammar is maintained in the [Source Commands](../../../docs/SOURCE-COMMANDS.md), not duplicated here.
 
 ### Markup Options
 
@@ -261,7 +261,7 @@ $core = AbstractCore::default()->withRenderTarget(
 );
 ```
 
-For complete custom mapper/emitter examples and closed extension boundaries, use [Extending Abstract](../docs/EXTENDING.md).
+For complete custom mapper/emitter examples and closed extension boundaries, use [Extending Abstract](../../../docs/EXTENDING.md).
 
 ## Examples And Development
 
@@ -281,4 +281,4 @@ Additional PHP references:
 - [PERFORMANCE.md](./PERFORMANCE.md): benchmark method and recorded results.
 - [REPORT.md](./REPORT.md): historical rescue and design record.
 
-The root [README](../README.md), [Core Concepts](../docs/CORE-CONCEPTS.md), and [Source Commands](../docs/SOURCE-COMMANDS.md) are the canonical shared documentation.
+The root [README](../../../README.md), [Core Concepts](../../../docs/CORE-CONCEPTS.md), and [Source Commands](../../../docs/SOURCE-COMMANDS.md) are the canonical shared documentation.
