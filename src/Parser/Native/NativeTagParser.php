@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
-namespace Abstract\Parser\Native;
+namespace Armes\Parser\Native;
 
-use Abstract\Exception\ParseException;
-use Abstract\Runtime\LogicOperators;
-use Abstract\Runtime\ValueTypes;
-use Abstract\Tree\Node;
+use Armes\Exception\ParseException;
+use Armes\Runtime\LogicOperators;
+use Armes\Runtime\ValueTypes;
+use Armes\Tree\Node;
 use stdClass;
 
 final class NativeTagParser
@@ -86,7 +86,7 @@ final class NativeTagParser
         $nodes = [];
         foreach ($entries as $key => $value) {
             if ($key === '') {
-                $this->fail('Abstract object keys must be non-empty strings.', $meta);
+                $this->fail('ARMES object keys must be non-empty strings.', $meta);
             }
             $nodes[] = $this->parseKeyedNode($key, $value, $this->appendPointer($meta, $key));
         }
@@ -311,7 +311,7 @@ final class NativeTagParser
      */
     private function handleUnknownLogicOperator(string $key, mixed $body, array $meta, string $preserveAs = 'runtime-key'): Node
     {
-        $message = sprintf('Unknown Abstract Logic operator "%s".', $key);
+        $message = sprintf('Unknown ARMES Logic operator "%s".', $key);
         if ($this->strict) {
             $this->fail($message, $meta);
         }
@@ -329,7 +329,7 @@ final class NativeTagParser
      */
     private function handleUnknownTypeCommand(string $key, mixed $body, array $meta): Node
     {
-        $message = sprintf('Unknown Abstract Type "%s".', $key);
+        $message = sprintf('Unknown ARMES Type "%s".', $key);
         if ($this->strict) {
             $this->fail($message, $meta);
         }
@@ -580,7 +580,7 @@ final class NativeTagParser
         $result = [];
         foreach ($entries as $key => $childValue) {
             if (!is_string($key) && !is_int($key)) {
-                $this->fail('Abstract object keys must be strings.', $this->meta(null, ''));
+                $this->fail('ARMES object keys must be strings.', $this->meta(null, ''));
             }
             $result[(string) $key] = $childValue;
         }

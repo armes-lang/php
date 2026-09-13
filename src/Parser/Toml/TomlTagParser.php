@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace Abstract\Parser\Toml;
+namespace Armes\Parser\Toml;
 
-use Abstract\Exception\ParseException;
-use Abstract\Parser\Native\NativeTagParser;
-use Abstract\Tree\Node;
+use Armes\Exception\ParseException;
+use Armes\Parser\Native\NativeTagParser;
+use Armes\Tree\Node;
 use Devium\Toml\Toml;
 use Devium\Toml\TomlError;
 
@@ -36,7 +36,7 @@ final class TomlTagParser
         try {
             $decoded = Toml::decode($toml, true);
         } catch (TomlError $exception) {
-            throw new ParseException(sprintf('Invalid Abstract TOML: %s', $exception->getMessage()), 0, $exception);
+            throw new ParseException(sprintf('Invalid ARMES TOML: %s', $exception->getMessage()), 0, $exception);
         }
 
         return $this->nativeParser->parse($decoded, $source);

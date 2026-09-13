@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
-namespace Abstract\Runtime;
+namespace Armes\Runtime;
 
-use Abstract\Exception\ImportException;
-use Abstract\Exception\RuntimeResolutionException;
-use Abstract\Parser\Json\JsonTagParser;
-use Abstract\Tree\Node;
+use Armes\Exception\ImportException;
+use Armes\Exception\RuntimeResolutionException;
+use Armes\Parser\Json\JsonTagParser;
+use Armes\Tree\Node;
 
 final class RuntimeResolver
 {
@@ -185,7 +185,7 @@ final class RuntimeResolver
         $source = isset($node->meta['source']) && is_string($node->meta['source']) ? $node->meta['source'] : null;
         $path = $this->resolveImportPath($src, $source);
         if (in_array($path, $importStack, true)) {
-            throw new ImportException('Circular Abstract import detected: ' . implode(' -> ', [...$importStack, $path]));
+            throw new ImportException('Circular ARMES import detected: ' . implode(' -> ', [...$importStack, $path]));
         }
 
         $importProps = isset($node->props['props']) && is_array($node->props['props'])
@@ -235,7 +235,7 @@ final class RuntimeResolver
 
         $real = realpath($candidate);
         if ($real === false || !is_file($real)) {
-            throw new ImportException(sprintf('Abstract import "%s" could not be resolved from "%s".', $src, $source ?? getcwd()));
+            throw new ImportException(sprintf('ARMES import "%s" could not be resolved from "%s".', $src, $source ?? getcwd()));
         }
 
         return $real;
@@ -246,7 +246,7 @@ final class RuntimeResolver
         $mtime = filemtime($path);
         $content = file_get_contents($path);
         if ($mtime === false || $content === false) {
-            throw new ImportException(sprintf('Unable to read Abstract import "%s".', $path));
+            throw new ImportException(sprintf('Unable to read ARMES import "%s".', $path));
         }
 
         $hash = hash('sha256', $content);

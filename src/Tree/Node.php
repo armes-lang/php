@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Abstract\Tree;
+namespace Armes\Tree;
 
 use InvalidArgumentException;
 
@@ -32,7 +32,7 @@ final class Node
         public readonly array $args = [],
     ) {
         if (!in_array($kind, [self::ELEMENT, self::RUNTIME, self::VALUE, self::FRAGMENT, self::LOGIC], true)) {
-            throw new InvalidArgumentException(sprintf('Unknown Abstract node kind "%s".', $kind));
+            throw new InvalidArgumentException(sprintf('Unknown ARMES node kind "%s".', $kind));
         }
     }
 
@@ -211,7 +211,7 @@ final class Node
                 self::childrenFromArray($data['args'] ?? []),
                 self::expectArray($data['meta'] ?? []),
             ),
-            default => throw new InvalidArgumentException('Invalid serialized Abstract node.'),
+            default => throw new InvalidArgumentException('Invalid serialized ARMES node.'),
         };
     }
 
@@ -223,7 +223,7 @@ final class Node
     {
         foreach ($children as $child) {
             if (!$child instanceof self) {
-                throw new InvalidArgumentException('Abstract node children must be Node instances.');
+                throw new InvalidArgumentException('ARMES node children must be Node instances.');
             }
         }
         return array_values($children);

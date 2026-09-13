@@ -4,10 +4,10 @@ declare(strict_types=1);
 
 require __DIR__ . '/bootstrap.php';
 
-use Abstract\AbstractCore;
-use Abstract\Emitter\JsonEmitter;
+use Armes\Armes;
+use Armes\Emitter\JsonEmitter;
 
-$core = new AbstractCore();
+$core = new Armes();
 $tree = $core->parseTomlFile(example_path('09-toml-storage.source.toml'));
 
 $html = $core->renderHtml($tree);

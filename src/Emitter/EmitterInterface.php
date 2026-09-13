@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Abstract\Emitter;
+namespace Armes\Emitter;
 
 interface EmitterInterface
 {

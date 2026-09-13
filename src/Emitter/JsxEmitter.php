@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace Abstract\Emitter;
+namespace Armes\Emitter;
 
-use Abstract\Exception\MappingException;
-use Abstract\Mapper\JsxDocument;
-use Abstract\Mapper\TargetNode;
+use Armes\Exception\MappingException;
+use Armes\Mapper\JsxDocument;
+use Armes\Mapper\TargetNode;
 
 final class JsxEmitter implements EmitterInterface
 {

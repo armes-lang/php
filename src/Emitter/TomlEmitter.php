@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace Abstract\Emitter;
+namespace Armes\Emitter;
 
-use Abstract\Exception\MappingException;
-use Abstract\Tree\Node;
+use Armes\Exception\MappingException;
+use Armes\Tree\Node;
 use Devium\Toml\Toml;
 use Devium\Toml\TomlError;
 

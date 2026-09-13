@@ -1,17 +1,17 @@
-# Abstract PHP Specification Notes
+# ARMES PHP Specification Notes
 
 This file records the PHP implementation's formal behavior and language-specific details. The canonical shared documentation is:
 
 - [Core Concepts](../../../docs/CORE-CONCEPTS.md) for the processing model and five node kinds.
 - [Source Commands](../../../docs/SOURCE-COMMANDS.md) for the complete portable command catalog.
-- [Extending Abstract](../../../docs/EXTENDING.md) for supported and closed public extension boundaries.
+- [Extending ARMES](../../../docs/EXTENDING.md) for supported and closed public extension boundaries.
 - [Feature Parity](../../../FEATURES.md) for differences between PHP and TypeScript.
 
 When this file and the shared command catalog overlap, the shared catalog defines portable source syntax and this file defines PHP implementation behavior.
 
 ## Canonical Model
 
-All PHP parsers normalize into `Abstract\Tree\Node`. The five public kinds are:
+All PHP parsers normalize into `Armes\Tree\Node`. The five public kinds are:
 
 | Kind | Required meaning |
 | --- | --- |
@@ -145,13 +145,13 @@ A modifier outside an Element is a strict resolution error.
 
 ### Imports
 
-`:import` and `:include` resolve another Abstract JSON file relative to the importing source path.
+`:import` and `:include` resolve another ARMES JSON file relative to the importing source path.
 
 ```json
 {
   ":import": {
     "@": {
-      "src": "./components/Card.abstract.json",
+      "src": "./components/Card.armes.json",
       "props": { "title": "Welcome" }
     },
     "#": [{ "p": "Slot content" }]
@@ -169,7 +169,7 @@ Other unknown Runtime names behave the same way. Parsing `:vendor.operation` doe
 
 ## Markup Parsing
 
-PHP provides distinct HTML, AML, and XML modes through `DomMarkupParser` and `MarkupParseOptions`.
+PHP provides distinct HTML, ARMES, and XML modes through `DomMarkupParser` and `MarkupParseOptions`.
 
 - Normal tags become Elements.
 - Known internal command tags normalize to Value, Logic, or Runtime nodes according to the same source rules.
@@ -180,7 +180,7 @@ PHP provides distinct HTML, AML, and XML modes through `DomMarkupParser` and `Ma
 - HTML void Elements are childless and following parsed descendants are lifted back to sibling position.
 - Text-only HTML becomes one string Value rather than an implicit `<p>`.
 
-Preferred AML command tags include `<:logic:eq>`, `<:type:bool>`, and `<:if>`. Compatibility forms are listed in the shared command catalog.
+Preferred ARMES command tags include `<:logic:eq>`, `<:type:bool>`, and `<:if>`. Compatibility forms are listed in the shared command catalog.
 
 Markup round-trip correctness is structural, not byte-for-byte. Formatting and attribute quote style are not stable contracts.
 
@@ -202,12 +202,12 @@ Pkl is PHP-only. Parsing uses:
 pkl eval --format=json --no-project --root-dir=<source-dir> --working-dir=<source-dir> <file>
 ```
 
-The bridge uses an argument array, timeout, and restricted root. Pkl parsing is an explicit operation for trusted local modules, not an Abstract runtime code command. Emission requires an object/map root.
+The bridge uses an argument array, timeout, and restricted root. Pkl parsing is an explicit operation for trusted local modules, not an ARMES runtime code command. Emission requires an object/map root.
 
 ## Source And Tree Emission
 
 - `sourceJson()` emits editable tag-key source and keeps internal commands.
-- `sourceAml()` emits editable AML and keeps internal commands.
+- `sourceArmes()` emits editable ARMES and keeps internal commands.
 - readable source defaults to `:logic:<op>` / `<:logic:<op>>`.
 - `operatorStyle: 'symbol'` emits aliases such as `:==` / `<:==>`.
 - `explicitTypedValues: true` requests `:type:*` wrappers where supported.
@@ -217,7 +217,7 @@ Canonical Logic JSON uses `kind`, canonical `op`, and `args`. Canonical typed Va
 
 ## Render Targets, Mappers, And Emitters
 
-`AbstractCore::render()` performs:
+`Armes::render()` performs:
 
 ```text
 resolve -> target lookup -> MappingContext -> mapper -> emitter
@@ -227,7 +227,7 @@ Built-in registered targets are HTML, JSX, and XML. YAML, TOML, and Pkl helpers 
 
 `RenderTarget` pairs `MapperInterface` and `EmitterInterface`. `withRenderTarget()` replaces or adds a named target immutably. Element mapping is target-specific: changing an HTML tag does not change JSX output.
 
-Public target extensions are documented in [Extending Abstract](../../../docs/EXTENDING.md). They do not add source commands or runtime evaluation.
+Public target extensions are documented in [Extending ARMES](../../../docs/EXTENDING.md). They do not add source commands or runtime evaluation.
 
 ## Strict And Loose Contracts
 
@@ -243,4 +243,4 @@ Loose parsing preserves unknown explicit domain source safely and reports diagno
 - PHP imports are built-in filesystem operations; TypeScript imports use loaders.
 - TypeScript legacy raw expressions support `in`; PHP does not. `:logic:in` is not portable or supported.
 - React runtime output belongs to TypeScript's external React mapper; PHP emits JSX-like source only.
-- XML parser backends differ, so portable documents should use the documented Abstract command forms and depend on structural rather than byte-identical output.
+- XML parser backends differ, so portable documents should use the documented ARMES command forms and depend on structural rather than byte-identical output.

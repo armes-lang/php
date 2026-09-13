@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
-namespace Abstract\Parser\Markup;
+namespace Armes\Parser\Markup;
 
-use Abstract\Exception\ParseException;
-use Abstract\Runtime\LogicOperators;
-use Abstract\Runtime\ValueTypes;
-use Abstract\Tree\Node;
+use Armes\Exception\ParseException;
+use Armes\Runtime\LogicOperators;
+use Armes\Runtime\ValueTypes;
+use Armes\Tree\Node;
 use DOMCdataSection;
 use DOMComment;
 use DOMDocument;
@@ -90,23 +90,23 @@ final class DomMarkupParser
         return $this->parseHtmlString($source, $path, $options);
     }
 
-    public function parseAmlFile(string $path, ?MarkupParseOptions $options = null): Node
+    public function parseArmesFile(string $path, ?MarkupParseOptions $options = null): Node
     {
         if (!is_file($path)) {
-            throw new ParseException(sprintf('AML source "%s" does not exist.', $path));
+            throw new ParseException(sprintf('ARMES source "%s" does not exist.', $path));
         }
 
         $source = file_get_contents($path);
         if ($source === false) {
-            throw new ParseException(sprintf('Unable to read AML source "%s".', $path));
+            throw new ParseException(sprintf('Unable to read ARMES source "%s".', $path));
         }
 
-        return $this->parseAmlString($source, $path, $options);
+        return $this->parseArmesString($source, $path, $options);
     }
 
-    public function parseAmlString(string $source, ?string $sourceName = null, ?MarkupParseOptions $options = null): Node
+    public function parseArmesString(string $source, ?string $sourceName = null, ?MarkupParseOptions $options = null): Node
     {
-        $options ??= new MarkupParseOptions(mode: MarkupParseOptions::MODE_AML);
+        $options ??= new MarkupParseOptions(mode: MarkupParseOptions::MODE_ARMES);
         return $this->parseHtmlString($source, $sourceName, $options);
     }
 
@@ -121,7 +121,7 @@ final class DomMarkupParser
         $this->resetPreservedNames();
 
         $html = $options->fragment
-            ? '<abstract-fragment-root>' . $this->preserveUnsupportedNames($source, $sourceName) . '</abstract-fragment-root>'
+            ? '<armes-fragment-root>' . $this->preserveUnsupportedNames($source, $sourceName) . '</armes-fragment-root>'
             : $this->preserveUnsupportedNames($source, $sourceName);
 
         $document = new DOMDocument('1.0', 'UTF-8');
@@ -135,7 +135,7 @@ final class DomMarkupParser
         }
 
         if ($options->fragment) {
-            $wrapper = $document->getElementsByTagName('abstract-fragment-root')->item(0);
+            $wrapper = $document->getElementsByTagName('armes-fragment-root')->item(0);
             if (!$wrapper instanceof DOMElement) {
                 throw new ParseException('Unable to locate internal HTML fragment wrapper.');
             }
@@ -517,7 +517,7 @@ final class DomMarkupParser
             return $existing;
         }
 
-        $placeholder = 'abstract-tag-' . count($this->preservedTagNames);
+        $placeholder = 'armes-tag-' . count($this->preservedTagNames);
         $this->preservedTagNames[$placeholder] = $name;
         return $placeholder;
     }
@@ -529,7 +529,7 @@ final class DomMarkupParser
             return $existing;
         }
 
-        $placeholder = 'data-abstract-attr-' . count($this->preservedAttributeNames);
+        $placeholder = 'data-armes-attr-' . count($this->preservedAttributeNames);
         $this->preservedAttributeNames[$placeholder] = $name;
         return $placeholder;
     }

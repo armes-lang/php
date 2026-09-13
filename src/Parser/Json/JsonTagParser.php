@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace Abstract\Parser\Json;
+namespace Armes\Parser\Json;
 
-use Abstract\Exception\ParseException;
-use Abstract\Parser\Native\NativeTagParser;
-use Abstract\Tree\Node;
+use Armes\Exception\ParseException;
+use Armes\Parser\Native\NativeTagParser;
+use Armes\Tree\Node;
 use JsonException;
 
 final class JsonTagParser
@@ -19,12 +19,12 @@ final class JsonTagParser
     public function parseFile(string $path): Node
     {
         if (!is_file($path)) {
-            throw new ParseException(sprintf('Abstract JSON source "%s" does not exist.', $path));
+            throw new ParseException(sprintf('ARMES JSON source "%s" does not exist.', $path));
         }
 
         $content = file_get_contents($path);
         if ($content === false) {
-            throw new ParseException(sprintf('Unable to read Abstract JSON source "%s".', $path));
+            throw new ParseException(sprintf('Unable to read ARMES JSON source "%s".', $path));
         }
 
         return $this->parseString($content, $path);
@@ -38,7 +38,7 @@ final class JsonTagParser
         try {
             $decoded = json_decode($json, false, 512, JSON_THROW_ON_ERROR);
         } catch (JsonException $exception) {
-            throw new ParseException(sprintf('Invalid Abstract JSON: %s', $exception->getMessage()), 0, $exception);
+            throw new ParseException(sprintf('Invalid ARMES JSON: %s', $exception->getMessage()), 0, $exception);
         }
 
         return $this->nativeParser->parse($decoded, $source, $strict, $diagnostics);

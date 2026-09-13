@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Abstract\Runtime;
+namespace Armes\Runtime;
 
 final class LogicOperators
 {

@@ -1,12 +1,12 @@
 {
   "main": [
     {
-      ":import": "./components/Header.abstract.json"
+      ":import": "./components/Header.armes.json"
     },
     {
       ":import": {
         "@": {
-          "src": "./components/Card.abstract.json",
+          "src": "./components/Card.armes.json",
           "props": {
             "title": "Welcome from import props"
           }

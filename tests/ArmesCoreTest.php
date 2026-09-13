@@ -2,27 +2,27 @@
 
 declare(strict_types=1);
 
-namespace Abstract\Tests;
+namespace Armes\Tests;
 
-use Abstract\AbstractCore;
-use Abstract\Emitter\HtmlEmitter;
-use Abstract\Emitter\JsonEmitter;
-use Abstract\Emitter\JsxEmitter;
-use Abstract\Exception\ImportException;
-use Abstract\Exception\MappingException;
-use Abstract\Exception\ParseException;
-use Abstract\Exception\RuntimeResolutionException;
-use Abstract\Mapper\HtmlElementMapping;
-use Abstract\Mapper\HtmlMapper;
-use Abstract\Mapper\ReactComponent;
-use Abstract\Mapper\ReactMapper;
-use Abstract\Parser\Json\JsonTagParser;
-use Abstract\Parser\Markup\DomMarkupParser;
-use Abstract\Parser\Markup\MarkupParseOptions;
-use Abstract\Parser\Pkl\PklTagParser;
-use Abstract\Render\RenderTarget;
-use Abstract\Runtime\RuntimeResolver;
-use Abstract\Tree\Node;
+use Armes\Armes;
+use Armes\Emitter\HtmlEmitter;
+use Armes\Emitter\JsonEmitter;
+use Armes\Emitter\JsxEmitter;
+use Armes\Exception\ImportException;
+use Armes\Exception\MappingException;
+use Armes\Exception\ParseException;
+use Armes\Exception\RuntimeResolutionException;
+use Armes\Mapper\HtmlElementMapping;
+use Armes\Mapper\HtmlMapper;
+use Armes\Mapper\ReactComponent;
+use Armes\Mapper\ReactMapper;
+use Armes\Parser\Json\JsonTagParser;
+use Armes\Parser\Markup\DomMarkupParser;
+use Armes\Parser\Markup\MarkupParseOptions;
+use Armes\Parser\Pkl\PklTagParser;
+use Armes\Render\RenderTarget;
+use Armes\Runtime\RuntimeResolver;
+use Armes\Tree\Node;
 use PHPUnit\Framework\TestCase;
 
 if (PHP_SAPI !== 'cli') {
@@ -33,15 +33,26 @@ if (PHP_SAPI !== 'cli') {
     require_once __DIR__ . '/../vendor/autoload.php';
 }
 
-final class AbstractCoreTest extends TestCase
+final class ArmesCoreTest extends TestCase
 {
     private JsonTagParser $parser;
-    private AbstractCore $core;
+    private Armes $core;
 
     protected function setUp(): void
     {
         $this->parser = new JsonTagParser();
-        $this->core = new AbstractCore($this->parser);
+        $this->core = new Armes($this->parser);
+    }
+
+    public function testArmesFileAndPublicNamingContract(): void
+    {
+        $tree = $this->core->parseArmesFile(__DIR__ . '/../fixtures/markup/hello.armes');
+        $source = $this->core->sourceArmes($tree, false);
+        self::assertSame('<section><h1>Hello</h1></section>', $this->core->renderHtml($this->core->parseArmes($source)));
+        // Former names are deliberate negative assertions for the breaking rename.
+        self::assertFalse(class_exists('Abstract\\AbstractCore'));
+        self::assertFalse(method_exists($this->core, 'parseAml'));
+        self::assertFalse(method_exists($this->core, 'sourceAml'));
     }
 
     public function testSimpleElementFixture(): void
@@ -269,7 +280,7 @@ final class AbstractCoreTest extends TestCase
             $this->parser->parseString('{":type:custom":"x"}');
             self::fail('Expected unknown :type command to throw.');
         } catch (ParseException $exception) {
-            self::assertStringContainsString('Unknown Abstract Type ":type:custom"', $exception->getMessage());
+            self::assertStringContainsString('Unknown ARMES Type ":type:custom"', $exception->getMessage());
         }
 
         $element = $this->parser->parseString('{"type:string":"x"}');
@@ -281,7 +292,7 @@ final class AbstractCoreTest extends TestCase
         self::assertSame(Node::RUNTIME, $loose->kind);
         self::assertSame('type:custom', $loose->name);
         self::assertSame('x', $loose->value);
-        self::assertStringContainsString('Unknown Abstract Type ":type:custom"', $diagnostics[0]['message']);
+        self::assertStringContainsString('Unknown ARMES Type ":type:custom"', $diagnostics[0]['message']);
     }
 
     public function testUnknownExplicitLogicOperatorsErrorInStrictModeAndPreserveInLooseMode(): void
@@ -290,14 +301,14 @@ final class AbstractCoreTest extends TestCase
             $this->parser->parseString('{":logic":{"eq":[1,2]}}');
             self::fail('Expected unknown :logic operator to throw.');
         } catch (ParseException $exception) {
-            self::assertStringContainsString('Unknown Abstract Logic operator "eq"', $exception->getMessage());
+            self::assertStringContainsString('Unknown ARMES Logic operator "eq"', $exception->getMessage());
         }
 
         try {
             $this->parser->parseString('{":logic:xor":[1,2]}');
             self::fail('Expected unknown logic namespace operator to throw.');
         } catch (ParseException $exception) {
-            self::assertStringContainsString('Unknown Abstract Logic operator ":logic:xor"', $exception->getMessage());
+            self::assertStringContainsString('Unknown ARMES Logic operator ":logic:xor"', $exception->getMessage());
         }
 
         $wrappedDiagnostics = [];
@@ -305,30 +316,30 @@ final class AbstractCoreTest extends TestCase
         self::assertSame(Node::RUNTIME, $wrapped->kind);
         self::assertSame('logic', $wrapped->name);
         self::assertSame(['eq' => [1, 2]], $wrapped->value);
-        self::assertStringContainsString('Unknown Abstract Logic operator "eq"', $wrappedDiagnostics[0]['message']);
+        self::assertStringContainsString('Unknown ARMES Logic operator "eq"', $wrappedDiagnostics[0]['message']);
 
         $qualifiedDiagnostics = [];
         $qualified = $this->core->parseJson('{":logic:xor":[1,2]}', strict: false, diagnostics: $qualifiedDiagnostics);
         self::assertSame(Node::RUNTIME, $qualified->kind);
         self::assertSame('logic:xor', $qualified->name);
-        self::assertStringContainsString('Unknown Abstract Logic operator ":logic:xor"', $qualifiedDiagnostics[0]['message']);
+        self::assertStringContainsString('Unknown ARMES Logic operator ":logic:xor"', $qualifiedDiagnostics[0]['message']);
     }
 
-    public function testAmlLogicOperatorAliasesAndSourceEmission(): void
+    public function testArmesLogicOperatorAliasesAndSourceEmission(): void
     {
-        $options = new MarkupParseOptions(mode: MarkupParseOptions::MODE_AML, preserveWhitespace: false, includeMeta: false);
-        $scoped = $this->core->parseAml(<<<'AML'
+        $options = new MarkupParseOptions(mode: MarkupParseOptions::MODE_ARMES, preserveWhitespace: false, includeMeta: false);
+        $scoped = $this->core->parseArmes(<<<'ARMES'
 	<:logic>
 	  <:logic:and>
 	    <:==><:type:bool>true</:type:bool><:type:int>1</:type:int></:==>
 	    <:logic:ne><:type:bool>false</:type:bool><:type:int>0</:type:int></:logic:ne>
 	  </:logic:and>
 	</:logic>
-	AML, options: $options);
-        $prefixed = $this->core->parseAml('<:logic:eq><:type:bool>true</:type:bool><:type:int>1</:type:int></:logic:eq>', options: $options);
-        $fallback = $this->core->parseAml('<:eq><:type:bool>true</:type:bool><:type:int>1</:type:int></:eq>', options: $options);
-        $readable = $this->core->parseAml('<:logic:eq><:type:bool>true</:type:bool><:type:int>1</:type:int></:logic:eq>', options: $options);
-        $legacyTyped = $this->core->parseAml('<:logic:eq><type:boolean>true</type:boolean><:int>1</:int></:logic:eq>', options: $options);
+	ARMES, options: $options);
+        $prefixed = $this->core->parseArmes('<:logic:eq><:type:bool>true</:type:bool><:type:int>1</:type:int></:logic:eq>', options: $options);
+        $fallback = $this->core->parseArmes('<:eq><:type:bool>true</:type:bool><:type:int>1</:type:int></:eq>', options: $options);
+        $readable = $this->core->parseArmes('<:logic:eq><:type:bool>true</:type:bool><:type:int>1</:type:int></:logic:eq>', options: $options);
+        $legacyTyped = $this->core->parseArmes('<:logic:eq><type:boolean>true</type:boolean><:int>1</:int></:logic:eq>', options: $options);
         $xmlLogic = $this->core->parseXml('<:logic:eq>true</:logic:eq>');
         $xmlTyped = $this->core->parseXml('<:type:bool>true</:type:bool>');
 
@@ -343,11 +354,11 @@ final class AbstractCoreTest extends TestCase
         self::assertSame($prefixed->op, $readable->op);
         self::assertSame($prefixed->args[0]->value, $readable->args[0]->value);
         self::assertSame($legacyTyped->args[0]->value, $readable->args[0]->value);
-        self::assertSame('<:logic:eq><:type:bool>true</:type:bool><:type:int>1</:type:int></:logic:eq>', $this->core->sourceAml($readable, false));
-        self::assertSame('<:==><:type:bool>true</:type:bool><:type:int>1</:type:int></:==>', $this->core->sourceAml($readable, false, 'symbol'));
+        self::assertSame('<:logic:eq><:type:bool>true</:type:bool><:type:int>1</:type:int></:logic:eq>', $this->core->sourceArmes($readable, false));
+        self::assertSame('<:==><:type:bool>true</:type:bool><:type:int>1</:type:int></:==>', $this->core->sourceArmes($readable, false, 'symbol'));
         self::assertSame('{":logic:eq":[true,1]}', $this->core->sourceJson($readable, false));
         self::assertSame('{":==":[true,1]}', $this->core->sourceJson($readable, false, 'symbol'));
-        self::assertSame('<:type:bool>true</:type:bool>', $this->core->sourceAml(Node::value('bool', true), false, explicitTypedValues: true));
+        self::assertSame('<:type:bool>true</:type:bool>', $this->core->sourceArmes(Node::value('bool', true), false, explicitTypedValues: true));
     }
 
     public function testIfTrueBranchFixture(): void
@@ -393,11 +404,11 @@ final class AbstractCoreTest extends TestCase
     public function testIncludeUsesTheDocumentedImportCompatibilityBehavior(): void
     {
         $tree = $this->parser->parseString(
-            '{":include":"./components/Header.abstract.json"}',
+            '{":include":"./components/Header.armes.json"}',
             __DIR__ . '/../fixtures/import/page.input.json',
         );
 
-        self::assertSame('<header class="site-header"><h1>Abstract</h1></header>', $this->core->renderHtml($tree));
+        self::assertSame('<header class="site-header"><h1>ARMES</h1></header>', $this->core->renderHtml($tree));
     }
 
     public function testEveryDocumentedStructuralValueCommandParsesAsAValue(): void
@@ -421,7 +432,7 @@ final class AbstractCoreTest extends TestCase
     {
         $this->expectException(ImportException::class);
 
-        $tree = $this->parser->parseFile(__DIR__ . '/../fixtures/import/components/CycleA.abstract.json');
+        $tree = $this->parser->parseFile(__DIR__ . '/../fixtures/import/components/CycleA.armes.json');
         $this->core->resolve($tree);
     }
 
@@ -429,7 +440,7 @@ final class AbstractCoreTest extends TestCase
     {
         $this->expectException(ImportException::class);
 
-        $tree = $this->parser->parseString('{":import":"./missing.abstract.json"}', __DIR__ . '/../fixtures/import/page.input.json');
+        $tree = $this->parser->parseString('{":import":"./missing.armes.json"}', __DIR__ . '/../fixtures/import/page.input.json');
         $this->core->resolve($tree);
     }
 
@@ -722,7 +733,7 @@ PKL);
     public function testPklReportsUnavailableCliClearly(): void
     {
         $this->expectException(ParseException::class);
-        (new PklTagParser(binary: '/definitely/missing/abstract-pkl'))->parseString('div = "Hello"');
+        (new PklTagParser(binary: '/definitely/missing/armes-pkl'))->parseString('div = "Hello"');
     }
 
     public function testPklRenderSyntaxValidatesThroughCli(): void
@@ -767,9 +778,9 @@ PKL);
         self::assertSame('<input type="text" name="email" />', $this->core->renderJsx($tree));
     }
 
-    public function testAbstractCoreCanUseCustomHtmlMapper(): void
+    public function testArmesCoreCanUseCustomHtmlMapper(): void
     {
-        $core = AbstractCore::default()->withRenderTarget('html', RenderTarget::make(
+        $core = Armes::default()->withRenderTarget('html', RenderTarget::make(
             HtmlMapper::make()->element('input', HtmlElementMapping::tag('x-input')),
             new HtmlEmitter(),
         ));
@@ -778,9 +789,9 @@ PKL);
         self::assertSame('<x-input type="text" name="email">Child</x-input>', $core->renderHtml($tree));
     }
 
-    public function testAbstractCoreCanUseCustomReactMapperWithImports(): void
+    public function testArmesCoreCanUseCustomReactMapperWithImports(): void
     {
-        $core = AbstractCore::default()->withRenderTarget('jsx', RenderTarget::make(
+        $core = Armes::default()->withRenderTarget('jsx', RenderTarget::make(
             ReactMapper::make()->component('input', ReactComponent::imported(
                 source: '@headlessui/react',
                 export: 'Input',
@@ -803,7 +814,7 @@ PKL);
             export: 'Input',
             as: 'HeadlessInput',
         );
-        $core = AbstractCore::default()->withRenderTarget('jsx', RenderTarget::make(
+        $core = Armes::default()->withRenderTarget('jsx', RenderTarget::make(
             ReactMapper::make()
                 ->component('input', $component)
                 ->component('ui.input', $component),
@@ -819,7 +830,7 @@ PKL);
 
     public function testConfigDrivenTargetCustomization(): void
     {
-        $core = AbstractCore::fromConfig([
+        $core = Armes::fromConfig([
             'targets' => [
                 'html' => [
                     'elements' => [

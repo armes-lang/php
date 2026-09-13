@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace Abstract\Parser\Yaml;
+namespace Armes\Parser\Yaml;
 
-use Abstract\Exception\ParseException;
-use Abstract\Parser\Native\NativeTagParser;
-use Abstract\Tree\Node;
+use Armes\Exception\ParseException;
+use Armes\Parser\Native\NativeTagParser;
+use Armes\Tree\Node;
 use Symfony\Component\Yaml\Exception\ParseException as SymfonyYamlParseException;
 use Symfony\Component\Yaml\Yaml;
 
@@ -36,7 +36,7 @@ final class YamlTagParser
         try {
             $decoded = Yaml::parse($yaml);
         } catch (SymfonyYamlParseException $exception) {
-            throw new ParseException(sprintf('Invalid Abstract YAML: %s', $exception->getMessage()), 0, $exception);
+            throw new ParseException(sprintf('Invalid ARMES YAML: %s', $exception->getMessage()), 0, $exception);
         }
 
         return $this->nativeParser->parse($decoded, $source);

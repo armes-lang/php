@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace Abstract\Runtime;
+namespace Armes\Runtime;
 
-use Abstract\Exception\RuntimeResolutionException;
-use Abstract\Tree\Node;
+use Armes\Exception\RuntimeResolutionException;
+use Armes\Tree\Node;
 
 final class LogicEvaluator
 {
@@ -57,7 +57,7 @@ final class LogicEvaluator
             '*' => array_product($this->numbers($operand, $context)),
             '/' => $this->divide($operand, $context),
             '%' => $this->modulo($operand, $context),
-            default => throw new RuntimeResolutionException(sprintf('Unknown Abstract Logic operator "%s".', $operator)),
+            default => throw new RuntimeResolutionException(sprintf('Unknown ARMES Logic operator "%s".', $operator)),
         };
     }
 
@@ -91,7 +91,7 @@ final class LogicEvaluator
             'mul' => array_product($this->numbers($args, $context)),
             'div' => $this->divide($args, $context),
             'mod' => $this->modulo($args, $context),
-            default => throw new RuntimeResolutionException(sprintf('Unknown Abstract Logic operator "%s".', $op)),
+            default => throw new RuntimeResolutionException(sprintf('Unknown ARMES Logic operator "%s".', $op)),
         };
     }
 
@@ -221,7 +221,7 @@ final class LogicEvaluator
         $first = array_shift($numbers);
         return array_reduce($numbers, function (float|int $carry, float|int $item): float|int {
             if ($item == 0) {
-                throw new RuntimeResolutionException('Division by zero in Abstract Logic expression.');
+                throw new RuntimeResolutionException('Division by zero in ARMES Logic expression.');
             }
             return $carry / $item;
         }, $first);

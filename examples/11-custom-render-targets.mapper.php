@@ -4,19 +4,19 @@ declare(strict_types=1);
 
 require __DIR__ . '/bootstrap.php';
 
-use Abstract\AbstractCore;
-use Abstract\Emitter\HtmlEmitter;
-use Abstract\Emitter\JsxEmitter;
-use Abstract\Mapper\HtmlElementMapping;
-use Abstract\Mapper\HtmlMapper;
-use Abstract\Mapper\ReactComponent;
-use Abstract\Mapper\ReactMapper;
-use Abstract\Render\RenderTarget;
+use Armes\Armes;
+use Armes\Emitter\HtmlEmitter;
+use Armes\Emitter\JsxEmitter;
+use Armes\Mapper\HtmlElementMapping;
+use Armes\Mapper\HtmlMapper;
+use Armes\Mapper\ReactComponent;
+use Armes\Mapper\ReactMapper;
+use Armes\Render\RenderTarget;
 
-$tree = (new AbstractCore())->parseJsonFile(example_path('11-custom-render-targets.source.json'));
+$tree = (new Armes())->parseJsonFile(example_path('11-custom-render-targets.source.json'));
 
-$defaultCore = new AbstractCore();
-$customCore = AbstractCore::default()
+$defaultCore = new Armes();
+$customCore = Armes::default()
     ->withRenderTarget('html', RenderTarget::make(
         HtmlMapper::make()->element('input', HtmlElementMapping::tag('x-input')),
         new HtmlEmitter(),

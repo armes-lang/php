@@ -2,13 +2,13 @@
 
 declare(strict_types=1);
 
-namespace Abstract\Emitter;
+namespace Armes\Emitter;
 
-use Abstract\Runtime\LogicOperators;
-use Abstract\Runtime\ValueTypes;
-use Abstract\Tree\Node;
+use Armes\Runtime\LogicOperators;
+use Armes\Runtime\ValueTypes;
+use Armes\Tree\Node;
 
-final class AmlEmitter
+final class ArmesEmitter
 {
     /** @var array<string, true> */
     private const TYPED_VALUE_TAGS = [

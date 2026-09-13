@@ -1,18 +1,18 @@
 # Developer Guide
 
-This guide is for people changing Abstract PHP itself. If you only want to use the library, start with `README.md`. If you want the portable language rules, read `SPEC.md`.
+This guide is for people changing ARMES PHP itself. If you only want to use the library, start with `README.md`. If you want the portable language rules, read `SPEC.md`.
 
 ## Project Mental Model
 
-Abstract is a compiler-style tree processor:
+ARMES is a compiler-style tree processor:
 
 ```text
-source -> parser/normalizer -> Abstract Tree -> runtime resolver -> mapper -> emitter
+source -> parser/normalizer -> ARMES Tree -> runtime resolver -> mapper -> emitter
 ```
 
 Keep those stages separate:
 
-- Parsers read a source syntax and normalize it into `Abstract\Tree\Node`.
+- Parsers read a source syntax and normalize it into `Armes\Tree\Node`.
 - The runtime resolver consumes first-class Logic nodes and Runtime nodes such as `:if`, `:each`, `:props`, and `:import`; Type domain commands normalize to Value nodes, and `:expr` is compatibility syntax.
 - Mappers decide target meaning, such as HTML or React/JSX target nodes.
 - Emitters serialize mapped nodes or tree data into strings.
@@ -49,8 +49,8 @@ Run the markup benchmark when changing `DomMarkupParser`, `HtmlEmitter`, `XmlEmi
 
 ```text
 src/
-  AbstractCore.php        facade for parse, resolve, render helpers
-  Tree/                   canonical Abstract Tree node model
+  Armes.php        facade for parse, resolve, render helpers
+  Tree/                   canonical ARMES Tree node model
   Parser/Native/          shared tag-key normalizer for decoded native data
   Parser/Json/            JSON decode + native normalizer
   Parser/Markup/          HTML/XML DOMDocument parser
@@ -72,16 +72,16 @@ benchmarks/               performance scripts and large HTML input
 Docs:
 
 - `README.md`: user overview and quick examples
-- `SPEC.md`: portable Abstract language contract
+- `SPEC.md`: portable ARMES language contract
 - `ARCHITECTURE.md`: implementation architecture
 - `DEVELOPMENT.md`: this contributor guide
 - `PERFORMANCE.md`: benchmark method and latest results
 - `REPORT.md`: historical rescue report and decisions
 - `AGENTS.md`: instructions for coding agents
 
-## Abstract Tree
+## ARMES Tree
 
-The canonical tree lives in `Abstract\Tree\Node`. Supported node kinds:
+The canonical tree lives in `Armes\Tree\Node`. Supported node kinds:
 
 - `element`: named renderable/component node with props and children
 - `runtime`: processing node with a runtime name, props, children, and optional value
@@ -106,7 +106,7 @@ When adding or changing tag-key behavior, update `NativeTagParser` first, then a
 
 `JsonTagParser`, `YamlTagParser`, `TomlTagParser`, and `PklTagParser` should stay thin. They decode source into native data and delegate to `NativeTagParser`.
 
-`DomMarkupParser` is separate because HTML/XML are tag-based markup, not native data formats. It converts DOM nodes directly into the same Abstract Tree model.
+`DomMarkupParser` is separate because HTML/XML are tag-based markup, not native data formats. It converts DOM nodes directly into the same ARMES Tree model.
 
 ## Adding A Parser
 
@@ -114,13 +114,13 @@ Use this checklist:
 
 1. Decode the source with a reliable native/library parser where possible.
 2. Convert decoded maps/lists/scalars through `NativeTagParser`, unless the source is real markup.
-3. Add `parseX` and `parseXFile` methods to `AbstractCore`.
+3. Add `parseX` and `parseXFile` methods to `Armes`.
 4. Add examples under `examples/`.
 5. Add shared fixtures under `fixtures/` when the syntax is portable.
 6. Add PHPUnit coverage for scalar roots, map roots, runtime nodes, props, children, and error cases.
 7. Document limitations in `SPEC.md` and `README.md`.
 
-Avoid custom parsers unless a native/library parser cannot preserve the semantics Abstract needs.
+Avoid custom parsers unless a native/library parser cannot preserve the semantics ARMES needs.
 
 ## Changing A Built-In Runtime Node
 
@@ -156,11 +156,11 @@ For storage/config output, use `JsonEmitter::toData()` to turn a resolved tree i
 
 Strict mappers should reject unresolved runtime nodes. Loose mappers may drop them only when safe.
 
-Register mapper/emitter pairs through `RenderTarget` when they should be available from `AbstractCore::render()` or a convenience method. Keep target-specific behavior inside target-specific mappers:
+Register mapper/emitter pairs through `RenderTarget` when they should be available from `Armes::render()` or a convenience method. Keep target-specific behavior inside target-specific mappers:
 
 - HTML tag replacement belongs in `HtmlMapper`.
 - React component/import mapping belongs in `ReactMapper` and `JsxEmitter`.
-- `AbstractCore` should only resolve runtime nodes and dispatch to the configured target.
+- `Armes` should only resolve runtime nodes and dispatch to the configured target.
 
 YAML, TOML, Pkl, and `treeJson()` currently serialize resolved tree data directly. Do not add fake mappers for them unless the target starts needing target-specific meaning.
 
@@ -184,7 +184,7 @@ When changing syntax, add or update:
 - source fixture
 - expected compact/canonical output where useful
 - expected rendered output
-- PHPUnit assertions in `tests/AbstractCoreTest.php`
+- PHPUnit assertions in `tests/ArmesCoreTest.php`
 
 Current broad coverage includes JSON syntax, runtime logic, imports, markup parsing, compact JSON reparse, XML/YAML/TOML/Pkl parsing, and renderer behavior.
 

@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace Abstract\Render;
+namespace Armes\Render;
 
-use Abstract\Exception\MappingException;
+use Armes\Exception\MappingException;
 
 final class RenderTargetRegistry
 {

@@ -2,34 +2,34 @@
 
 declare(strict_types=1);
 
-namespace Abstract;
+namespace Armes;
 
-use Abstract\Emitter\HtmlEmitter;
-use Abstract\Emitter\JsonEmitter;
-use Abstract\Emitter\JsxEmitter;
-use Abstract\Emitter\PklEmitter;
-use Abstract\Emitter\AmlEmitter;
-use Abstract\Emitter\SourceSerializer;
-use Abstract\Emitter\TomlEmitter;
-use Abstract\Emitter\XmlEmitter;
-use Abstract\Emitter\YamlEmitter;
-use Abstract\Mapper\HtmlMapper;
-use Abstract\Mapper\ReactMapper;
-use Abstract\Parser\Json\JsonTagParser;
-use Abstract\Parser\Markup\DomMarkupParser;
-use Abstract\Parser\Markup\MarkupParseOptions;
-use Abstract\Parser\Pkl\PklTagParser;
-use Abstract\Parser\Toml\TomlTagParser;
-use Abstract\Parser\Yaml\YamlTagParser;
-use Abstract\Mapper\HtmlElementMapping;
-use Abstract\Mapper\MappingContext;
-use Abstract\Mapper\ReactComponent;
-use Abstract\Render\RenderTarget;
-use Abstract\Render\RenderTargetRegistry;
-use Abstract\Runtime\RuntimeResolver;
-use Abstract\Tree\Node;
+use Armes\Emitter\HtmlEmitter;
+use Armes\Emitter\JsonEmitter;
+use Armes\Emitter\JsxEmitter;
+use Armes\Emitter\PklEmitter;
+use Armes\Emitter\ArmesEmitter;
+use Armes\Emitter\SourceSerializer;
+use Armes\Emitter\TomlEmitter;
+use Armes\Emitter\XmlEmitter;
+use Armes\Emitter\YamlEmitter;
+use Armes\Mapper\HtmlMapper;
+use Armes\Mapper\ReactMapper;
+use Armes\Parser\Json\JsonTagParser;
+use Armes\Parser\Markup\DomMarkupParser;
+use Armes\Parser\Markup\MarkupParseOptions;
+use Armes\Parser\Pkl\PklTagParser;
+use Armes\Parser\Toml\TomlTagParser;
+use Armes\Parser\Yaml\YamlTagParser;
+use Armes\Mapper\HtmlElementMapping;
+use Armes\Mapper\MappingContext;
+use Armes\Mapper\ReactComponent;
+use Armes\Render\RenderTarget;
+use Armes\Render\RenderTargetRegistry;
+use Armes\Runtime\RuntimeResolver;
+use Armes\Tree\Node;
 
-final class AbstractCore
+final class Armes
 {
     private readonly JsonTagParser $parser;
     private readonly RenderTargetRegistry $renderTargets;
@@ -130,14 +130,14 @@ final class AbstractCore
         return (new DomMarkupParser())->parseHtmlFile($path, $options);
     }
 
-    public function parseAml(string $aml, ?string $source = null, ?MarkupParseOptions $options = null): Node
+    public function parseArmes(string $armes, ?string $source = null, ?MarkupParseOptions $options = null): Node
     {
-        return (new DomMarkupParser())->parseAmlString($aml, $source, $options);
+        return (new DomMarkupParser())->parseArmesString($armes, $source, $options);
     }
 
-    public function parseAmlFile(string $path, ?MarkupParseOptions $options = null): Node
+    public function parseArmesFile(string $path, ?MarkupParseOptions $options = null): Node
     {
-        return (new DomMarkupParser())->parseAmlFile($path, $options);
+        return (new DomMarkupParser())->parseArmesFile($path, $options);
     }
 
     public function parseXml(string $xml, ?string $source = null, ?MarkupParseOptions $options = null): Node
@@ -265,9 +265,9 @@ final class AbstractCore
         );
     }
 
-    public function sourceAml(Node $tree, bool $pretty = true, string $operatorStyle = 'readable', bool $explicitTypedValues = false): string
+    public function sourceArmes(Node $tree, bool $pretty = true, string $operatorStyle = 'readable', bool $explicitTypedValues = false): string
     {
-        return (new AmlEmitter())->emitTree($tree, $pretty, $operatorStyle, explicitTypedValues: $explicitTypedValues);
+        return (new ArmesEmitter())->emitTree($tree, $pretty, $operatorStyle, explicitTypedValues: $explicitTypedValues);
     }
 
     private static function defaultRenderTargets(): RenderTargetRegistry

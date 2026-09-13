@@ -4,11 +4,11 @@ declare(strict_types=1);
 
 require __DIR__ . '/bootstrap.php';
 
-use Abstract\AbstractCore;
-use Abstract\Emitter\JsonEmitter;
-use Abstract\Parser\Markup\MarkupParseOptions;
+use Armes\Armes;
+use Armes\Emitter\JsonEmitter;
+use Armes\Parser\Markup\MarkupParseOptions;
 
-$core = new AbstractCore();
+$core = new Armes();
 $tree = $core->parseHtmlFile(example_path('00-text-markup-roundtrip.source.html'), new MarkupParseOptions(includeMeta: false));
 $compactJson = $core->treeJson($tree, pretty: true, mode: JsonEmitter::MODE_COMPACT);
 

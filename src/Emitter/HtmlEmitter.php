@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace Abstract\Emitter;
+namespace Armes\Emitter;
 
-use Abstract\Exception\MappingException;
-use Abstract\Mapper\TargetNode;
+use Armes\Exception\MappingException;
+use Armes\Mapper\TargetNode;
 
 final class HtmlEmitter implements EmitterInterface
 {

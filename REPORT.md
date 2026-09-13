@@ -4,8 +4,8 @@
 
 The old repository was a sequence of drafts rather than a maintainable package:
 
-- 2023 history started as `Compiler`/`Processor` AML experiments that mapped XML-like markup into PHP method/class access and HTML output.
-- Later history pivoted into a large mutable `Abstraction`/`Reference`/`Value` tree model with DOM/markup experiments.
+- 2023 history started as `Compiler`/`Processor` ARMES experiments that mapped XML-like markup into PHP method/class access and HTML output.
+- Later history pivoted into a large mutable mutable tree/reference/value model with DOM/markup experiments.
 - The most recent commit bolted on JSON Logic classes, including duplicate `JsonLogic copy` folders.
 - No PHPUnit/Pest config existed.
 - `tests/` contained manual scripts, fixtures, timing probes, and old experiments rather than assertions.
@@ -34,7 +34,7 @@ The old tracked `src/` implementation and manual `tests/` scripts were replaced 
 
 Major replacements:
 
-- legacy mutable `Abstract\Abstraction` model -> current `Abstract\Tree\Node`
+- legacy mutable tree model -> current `Armes\Tree\Node`
 - reflection-heavy parser/resolver/factory draft -> explicit parser/runtime/mapper contracts
 - unsafe execution-oriented compiler intent -> safe data-based runtime
 - manual probe scripts -> PHPUnit suite
@@ -43,7 +43,7 @@ Major replacements:
 
 ## Design Decisions
 
-- The public PHP namespace is capitalized `Abstract`; lowercase `abstract` remains a reserved keyword and should be avoided as an identifier.
+- The public PHP namespace is `Armes`, with the main facade at `Armes\Armes`.
 - JSON is the reference v0 authoring syntax, with HTML/XML markup parsers and YAML/TOML/Pkl data parsers now normalizing to the same tree model.
 - HTML markup parsing now uses a fresh DOMDocument adapter, not the old draft `MarkupParser`.
 - JSON, YAML, TOML, and Pkl now share one native tag-key normalizer so future implementations can target the same fixtures and behavior.
@@ -58,7 +58,7 @@ Major replacements:
 - The core logic evaluator is implemented locally to avoid a dependency and to keep the initial operator set small and auditable.
 - Compact JSON is the storage-oriented export format. Canonical JSON remains the full internal tree format.
 - Markup roundtrip validation is structural rather than byte-for-byte because DOMDocument and emitters normalize formatting and void tags.
-- `AbstractCore` is now a configurable facade over render targets; React component mapping and HTML tag mapping are target-specific mapper behavior, not special facade logic.
+- `Armes` is now a configurable facade over render targets; React component mapping and HTML tag mapping are target-specific mapper behavior, not special facade logic.
 
 ## Implementation Summary
 
@@ -87,7 +87,7 @@ Implemented:
 - raw `script`/`style` HTML emission
 - large HTML roundtrip benchmark with structural fingerprint comparison
 - configurable `RenderTarget` and `RenderTargetRegistry`
-- generic `AbstractCore::render()` plus convenience wrappers
+- generic `Armes::render()` plus convenience wrappers
 - `MappingContext` for strict mode, target name, runtime context, and future options
 - target-aware custom JSX component mapping with import deduplication
 - target-aware custom HTML tag replacement

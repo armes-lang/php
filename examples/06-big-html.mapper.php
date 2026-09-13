@@ -4,17 +4,17 @@ declare(strict_types=1);
 
 require __DIR__ . '/bootstrap.php';
 
-use Abstract\AbstractCore;
-use Abstract\Emitter\JsonEmitter;
-use Abstract\Parser\Markup\MarkupParseOptions;
-use Abstract\Tree\Node;
+use Armes\Armes;
+use Armes\Emitter\JsonEmitter;
+use Armes\Parser\Markup\MarkupParseOptions;
+use Armes\Tree\Node;
 
 $sourcePath = example_path('big-html.html');
 $compactJsonPath = example_output_path('06-big-html.compact.json');
 $roundtripHtmlPath = example_output_path('06-big-html.roundtrip.html');
 $reportPath = example_output_path('06-big-html.report.json');
 
-$core = new AbstractCore();
+$core = new Armes();
 $timings = [];
 
 $tree = measure_example('parse_html_ms', $timings, static fn (): Node => $core->parseHtmlFile(

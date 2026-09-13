@@ -2,10 +2,10 @@
 
 ## Pipeline
 
-Abstract PHP v0 uses a compiler-style pipeline:
+ARMES PHP v0 uses a compiler-style pipeline:
 
 ```text
-source -> parser/normalizer -> Abstract Tree -> runtime resolver -> mapper -> emitter
+source -> parser/normalizer -> ARMES Tree -> runtime resolver -> mapper -> emitter
 ```
 
 Each stage has one job:
@@ -19,7 +19,7 @@ Each stage has one job:
 
 ```text
 src/
-  AbstractCore.php
+  Armes.php
   Tree/
   Parser/Json/
   Parser/Markup/
@@ -34,11 +34,11 @@ src/
   Exception/
 ```
 
-The public PHP namespace is `Abstract\...`. PHP accepts the capitalized namespace, but lowercase `abstract` remains a reserved keyword, so docs and code should keep the capitalized form.
+The public PHP namespace is `Armes\...`, with the main facade at `Armes\Armes`.
 
 ## Tree Model
 
-`Abstract\Tree\Node` is the canonical tree value object. It supports `element`, `runtime`, `value`, `fragment`, and `logic` node creation plus array serialization for shared fixtures.
+`Armes\Tree\Node` is the canonical tree value object. It supports `element`, `runtime`, `value`, `fragment`, and `logic` node creation plus array serialization for shared fixtures.
 
 The tree is intentionally strict and plain. Render behavior does not live on the node model.
 
@@ -73,7 +73,7 @@ The PHP bridge uses `proc_open` with an argument array, a timeout, and a restric
 
 ## Markup Parser
 
-`Parser/Markup/DomMarkupParser` is the v0 HTML/XML-style parser. It is a new implementation that uses DOMDocument/libxml as the parsing engine and normalizes DOM nodes into the same Abstract Tree model as JSON.
+`Parser/Markup/DomMarkupParser` is the v0 HTML/XML-style parser. It is a new implementation that uses DOMDocument/libxml as the parsing engine and normalizes DOM nodes into the same ARMES Tree model as JSON.
 
 HTML parser decisions:
 
@@ -86,7 +86,7 @@ HTML parser decisions:
 - HTML void elements are normalized as childless even when DOMDocument nests following nodes under them.
 - text-only HTML source bypasses DOMDocument and becomes a single string value, preventing libxml's implicit `<p>` insertion.
 
-The old draft markup parser is not a dependency. Its useful direction was native parser integration; its API and abstractions were replaced.
+The old draft markup parser is not a dependency. Its useful direction was native parser integration; its API and armesions were replaced.
 
 ## Runtime
 
@@ -99,7 +99,7 @@ Runtime behavior:
 - `:if` resolves one branch.
 - `:each` expands children with a loop context.
 - `:props` and `:attributes` patch only the direct parent element.
-- `:import` and `:include` parse and resolve another Abstract JSON file.
+- `:import` and `:include` parse and resolve another ARMES JSON file.
 - code payload nodes are rejected in strict mode and dropped with a warning in loose mode.
 
 `LogicEvaluator` implements a small JSON-Logic-inspired expression system without raw `eval`.
@@ -112,11 +112,11 @@ Circular imports are detected with an import stack and reported as strict errors
 
 ## Render Targets, Mappers, And Emitters
 
-`RenderTarget` pairs a mapper with an emitter. `RenderTargetRegistry` stores target names such as `html`, `jsx`, and `xml`. `AbstractCore::render()` resolves runtime nodes, fetches the target, creates a `MappingContext`, maps the tree, then emits the mapped result.
+`RenderTarget` pairs a mapper with an emitter. `RenderTargetRegistry` stores target names such as `html`, `jsx`, and `xml`. `Armes::render()` resolves runtime nodes, fetches the target, creates a `MappingContext`, maps the tree, then emits the mapped result.
 
 `renderHtml()`, `renderJsx()`, and `renderXml()` are convenience wrappers over registered targets. Built-in targets can be replaced with `withRenderTarget()`, and simple HTML/JSX mapping can be configured with `fromConfig()` or `withConfig()`.
 
-`HtmlMapper` and `ReactMapper` produce target nodes. `HtmlEmitter`, `XmlEmitter`, and `JsxEmitter` serialize those target nodes. JSON/YAML/TOML/Pkl emitters serialize the resolved Abstract Tree through compact/tagged/canonical data modes.
+`HtmlMapper` and `ReactMapper` produce target nodes. `HtmlEmitter`, `XmlEmitter`, and `JsxEmitter` serialize those target nodes. JSON/YAML/TOML/Pkl emitters serialize the resolved ARMES Tree through compact/tagged/canonical data modes.
 
 HTML output:
 
@@ -132,7 +132,7 @@ HTML output:
 JSX output:
 
 - default native JSX mapping works without configuration
-- custom `ReactComponent` mappings can replace Abstract element names with local or imported components
+- custom `ReactComponent` mappings can replace ARMES element names with local or imported components
 - imports are collected into a `JsxDocument` and deduplicated before emission
 - `class` maps to `className` when `className` is not already present
 - scalar props use JSX-safe output
@@ -147,7 +147,7 @@ XML output:
 
 YAML/TOML/Pkl output:
 
-- runtime resolution runs first through `AbstractCore`
+- runtime resolution runs first through `Armes`
 - compact mode is the default serialized data shape
 - TOML and Pkl require object/map roots
 - these tree serializers are not forced through fake mappers in v0

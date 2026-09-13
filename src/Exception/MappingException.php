@@ -2,8 +2,8 @@
 
 declare(strict_types=1);
 
-namespace Abstract\Exception;
+namespace Armes\Exception;
 
-class MappingException extends AbstractException
+class MappingException extends ArmesException
 {
 }

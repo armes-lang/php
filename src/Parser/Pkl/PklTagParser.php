@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace Abstract\Parser\Pkl;
+namespace Armes\Parser\Pkl;
 
-use Abstract\Exception\ParseException;
-use Abstract\Parser\Native\NativeTagParser;
-use Abstract\Tree\Node;
+use Armes\Exception\ParseException;
+use Armes\Parser\Native\NativeTagParser;
+use Armes\Tree\Node;
 use JsonException;
 
 final class PklTagParser
@@ -34,7 +34,7 @@ final class PklTagParser
 
     public function parseString(string $pkl, ?string $source = null): Node
     {
-        $root = sys_get_temp_dir() . '/abstract-pkl-' . bin2hex(random_bytes(8));
+        $root = sys_get_temp_dir() . '/armes-pkl-' . bin2hex(random_bytes(8));
         if (!mkdir($root, 0700, true) && !is_dir($root)) {
             throw new ParseException('Unable to create temporary Pkl evaluation directory.');
         }

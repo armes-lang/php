@@ -2,13 +2,13 @@
 
 declare(strict_types=1);
 
-use Abstract\Emitter\HtmlEmitter;
-use Abstract\Emitter\JsonEmitter;
-use Abstract\Mapper\HtmlMapper;
-use Abstract\Parser\Json\JsonTagParser;
-use Abstract\Parser\Markup\DomMarkupParser;
-use Abstract\Parser\Markup\MarkupParseOptions;
-use Abstract\Tree\Node;
+use Armes\Emitter\HtmlEmitter;
+use Armes\Emitter\JsonEmitter;
+use Armes\Mapper\HtmlMapper;
+use Armes\Parser\Json\JsonTagParser;
+use Armes\Parser\Markup\DomMarkupParser;
+use Armes\Parser\Markup\MarkupParseOptions;
+use Armes\Tree\Node;
 
 require __DIR__ . '/../vendor/autoload.php';
 

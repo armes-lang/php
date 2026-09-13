@@ -4,10 +4,10 @@ declare(strict_types=1);
 
 require dirname(__DIR__) . '/vendor/autoload.php';
 
-use Abstract\Emitter\HtmlEmitter;
-use Abstract\Mapper\HtmlMapper;
-use Abstract\Parser\Json\JsonTagParser;
-use Abstract\Runtime\RuntimeResolver;
+use Armes\Emitter\HtmlEmitter;
+use Armes\Mapper\HtmlMapper;
+use Armes\Parser\Json\JsonTagParser;
+use Armes\Runtime\RuntimeResolver;
 
 $parser = new JsonTagParser();
 

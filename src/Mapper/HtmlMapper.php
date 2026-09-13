@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace Abstract\Mapper;
+namespace Armes\Mapper;
 
-use Abstract\Exception\MappingException;
-use Abstract\Tree\Node;
+use Armes\Exception\MappingException;
+use Armes\Tree\Node;
 
 final class HtmlMapper implements MapperInterface
 {

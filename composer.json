@@ -1,11 +1,11 @@
 {
-    "name": "abstracts/abstract",
+    "name": "armes-lang/core",
     "description": "Spec-first, language-agnostic tree processor with a PHP v0 implementation.",
     "type": "library",
     "license": "proprietary",
     "autoload": {
         "psr-4": {
-            "Abstract\\": "src/"
+            "Armes\\": "src/"
         }
     },
     "authors": [

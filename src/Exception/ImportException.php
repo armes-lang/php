@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Abstract\Exception;
+namespace Armes\Exception;
 
 class ImportException extends RuntimeResolutionException
 {

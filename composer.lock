@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "61820d2f80702bf3dfc5bdca7a3130a8",
+    "content-hash": "8e2c3bbd7722ceef5db19cdd1aceeab1",
     "packages": [
         {
             "name": "devium/toml",

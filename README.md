@@ -1,12 +1,12 @@
-# Abstract Core For PHP
+# ARMES Core For PHP
 
-This package is the PHP implementation of Abstract. It parses Abstract source into the shared canonical tree, resolves safe data-driven commands, maps the tree for a target, and emits source or rendered output.
+This package is the PHP implementation of ARMES. It parses ARMES source into the shared canonical tree, resolves safe data-driven commands, maps the tree for a target, and emits source or rendered output.
 
-Start with the shared documentation if Abstract is new to you:
+Start with the shared documentation if ARMES is new to you:
 
 - [Core Concepts](../../../docs/CORE-CONCEPTS.md): the parser, node, resolver, mapper, and emitter pipeline.
 - [Source Commands](../../../docs/SOURCE-COMMANDS.md): every built-in command, preferred spelling, alias, result, and constraint.
-- [Extending Abstract](../../../docs/EXTENDING.md): supported custom mappers, emitters, render targets, and external formats.
+- [Extending ARMES](../../../docs/EXTENDING.md): supported custom mappers, emitters, render targets, and external formats.
 - [Feature Parity](../../../FEATURES.md): PHP and TypeScript support compared.
 
 ## Index
@@ -26,7 +26,7 @@ Start with the shared documentation if Abstract is new to you:
 
 - PHP 8.2 or later
 - Composer
-- PHP DOM/libxml for HTML, AML, and XML parsing
+- PHP DOM/libxml for HTML, ARMES, and XML parsing
 - the `pkl` CLI only when using Pkl parsing
 
 From this package checkout:
@@ -35,7 +35,7 @@ From this package checkout:
 composer install
 ```
 
-The package namespace is `Abstract\` and Composer package name is `abstracts/abstract`.
+The package namespace is `Armes\` and Composer package name is `armes-lang/core`.
 
 ## Quick Start
 
@@ -46,7 +46,7 @@ This is the same walkthrough used in the TypeScript guide.
 
 require __DIR__ . '/vendor/autoload.php';
 
-use Abstract\AbstractCore;
+use Armes\Armes;
 
 $source = <<<'JSON'
 {
@@ -65,7 +65,7 @@ $source = <<<'JSON'
 }
 JSON;
 
-$core = AbstractCore::default();
+$core = Armes::default();
 $tree = $core->parseJson($source);
 
 echo $core->renderHtml($tree, [
@@ -88,9 +88,9 @@ Use the operation that matches the job:
 ```php
 $tree = $core->parseJson($source);
 
-// Editable Abstract source. Commands are preserved.
+// Editable ARMES source. Commands are preserved.
 $jsonSource = $core->sourceJson($tree);
-$amlSource = $core->sourceAml($tree);
+$armesSource = $core->sourceArmes($tree);
 
 // Canonical kind/name/type/op tree for inspection or interchange.
 $canonical = $core->treeJson($tree);
@@ -102,18 +102,18 @@ $resolved = $core->resolve($tree, ['order' => ['total' => 125]]);
 $html = $core->renderHtml($tree, ['order' => ['total' => 125]]);
 ```
 
-`sourceJson()` and `sourceAml()` do not evaluate conditions or loops. `treeJson()` does not convert back to tag-key source. See [Source Emission And Rendering](../../../docs/CORE-CONCEPTS.md#source-emission-and-rendering) for the conceptual difference.
+`sourceJson()` and `sourceArmes()` do not evaluate conditions or loops. `treeJson()` does not convert back to tag-key source. See [Source Emission And Rendering](../../../docs/CORE-CONCEPTS.md#source-emission-and-rendering) for the conceptual difference.
 
 ## Parsing
 
-`AbstractCore` exposes these parser methods:
+`Armes` exposes these parser methods:
 
 | Format | String method | File method | Notes |
 | --- | --- | --- | --- |
 | JSON tag-key | `parseJson()` | `parseJsonFile()` | reference native-data syntax |
-| AML | `parseAml()` | `parseAmlFile()` | Abstract command tags such as `<:if>` and `<:logic:eq>` |
+| ARMES | `parseArmes()` | `parseArmesFile()` | ARMES command tags such as `<:if>` and `<:logic:eq>` |
 | HTML | `parseHtml()` | `parseHtmlFile()` | DOMDocument-backed markup parsing |
-| XML | `parseXml()` | `parseXmlFile()` | XML parsing with Abstract-aware command preprocessing |
+| XML | `parseXml()` | `parseXmlFile()` | XML parsing with ARMES-aware command preprocessing |
 | YAML | `parseYaml()` | `parseYamlFile()` | normalizes through the native tag-key parser |
 | TOML | `parseToml()` | `parseTomlFile()` | object/table-oriented source |
 | Pkl | `parsePkl()` | `parsePklFile()` | PHP-only; trusted local modules through the `pkl` CLI |
@@ -136,7 +136,7 @@ The complete grammar is maintained in the [Source Commands](../../../docs/SOURCE
 `MarkupParseOptions` controls mode-specific behavior such as fragments, whitespace, comments, doctypes, source metadata, strictness, runtime tags, nonstandard names, boolean attributes, and libxml flags.
 
 ```php
-use Abstract\Parser\Markup\MarkupParseOptions;
+use Armes\Parser\Markup\MarkupParseOptions;
 
 $tree = $core->parseHtml(
     '<section><h1>Hello</h1></section>',
@@ -156,7 +156,7 @@ $logic = $core->parseJson('{":==":[true,1]}');
 echo $core->sourceJson($logic, pretty: false);
 // {":logic:eq":[true,1]}
 
-echo $core->sourceAml($logic, pretty: false);
+echo $core->sourceArmes($logic, pretty: false);
 // <:logic:eq><:type:bool>true</:type:bool><:type:int>1</:type:int></:logic:eq>
 ```
 
@@ -227,7 +227,7 @@ Loose mode supports editing and diagnostics. It does not execute or register unk
 {
   ":import": {
     "@": {
-      "src": "./components/Card.abstract.json",
+      "src": "./components/Card.armes.json",
       "props": { "title": "Welcome" }
     },
     "#": [{ "p": "Slot content" }]
@@ -246,13 +246,13 @@ Target customization is intentionally separate from source commands. A custom HT
 ```php
 <?php
 
-use Abstract\AbstractCore;
-use Abstract\Emitter\HtmlEmitter;
-use Abstract\Mapper\HtmlElementMapping;
-use Abstract\Mapper\HtmlMapper;
-use Abstract\Render\RenderTarget;
+use Armes\Armes;
+use Armes\Emitter\HtmlEmitter;
+use Armes\Mapper\HtmlElementMapping;
+use Armes\Mapper\HtmlMapper;
+use Armes\Render\RenderTarget;
 
-$core = AbstractCore::default()->withRenderTarget(
+$core = Armes::default()->withRenderTarget(
     'html',
     RenderTarget::make(
         HtmlMapper::make()->element('input', HtmlElementMapping::tag('x-input')),
@@ -261,7 +261,7 @@ $core = AbstractCore::default()->withRenderTarget(
 );
 ```
 
-For complete custom mapper/emitter examples and closed extension boundaries, use [Extending Abstract](../../../docs/EXTENDING.md).
+For complete custom mapper/emitter examples and closed extension boundaries, use [Extending ARMES](../../../docs/EXTENDING.md).
 
 ## Examples And Development
 
@@ -271,7 +271,7 @@ php benchmarks/core-benchmark.php
 php benchmarks/markup-benchmark.php
 ```
 
-Runnable examples are in [`examples/`](./examples/), including logic, imports, AML, XML, YAML, TOML, Pkl, mappings, and large HTML round trips.
+Runnable examples are in [`examples/`](./examples/), including logic, imports, ARMES, XML, YAML, TOML, Pkl, mappings, and large HTML round trips.
 
 Additional PHP references:
 

@@ -4,10 +4,10 @@ declare(strict_types=1);
 
 require __DIR__ . '/bootstrap.php';
 
-use Abstract\AbstractCore;
-use Abstract\Emitter\JsonEmitter;
+use Armes\Armes;
+use Armes\Emitter\JsonEmitter;
 
-$core = new AbstractCore();
+$core = new Armes();
 $tree = $core->parseJsonFile(example_path('01-basic-html.source.json'));
 
 example_print('HTML', $core->renderHtml($tree));

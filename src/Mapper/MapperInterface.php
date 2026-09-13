@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace Abstract\Mapper;
+namespace Armes\Mapper;
 
-use Abstract\Tree\Node;
+use Armes\Tree\Node;
 
 interface MapperInterface
 {

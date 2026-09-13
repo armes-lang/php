@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace Abstract\Emitter;
+namespace Armes\Emitter;
 
-use Abstract\Tree\Node;
+use Armes\Tree\Node;
 use Symfony\Component\Yaml\Yaml;
 
 final class YamlEmitter

@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
-namespace Abstract\Render;
+namespace Armes\Render;
 
-use Abstract\Emitter\EmitterInterface;
-use Abstract\Mapper\MapperInterface;
-use Abstract\Mapper\MappingContext;
-use Abstract\Tree\Node;
+use Armes\Emitter\EmitterInterface;
+use Armes\Mapper\MapperInterface;
+use Armes\Mapper\MappingContext;
+use Armes\Tree\Node;
 
 final class RenderTarget
 {
