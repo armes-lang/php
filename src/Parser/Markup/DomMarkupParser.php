@@ -498,6 +498,14 @@ final class DomMarkupParser
             ? $children[0]->value
             : array_map(static fn (Node $child): mixed => $child->kind === Node::VALUE ? $child->value : $child->toArray(), $children);
 
+        if (in_array($type, ['array', 'object'], true) && is_string($rawValue)) {
+            try {
+                $rawValue = json_decode($rawValue, true, 512, JSON_THROW_ON_ERROR);
+            } catch (\JsonException $error) {
+                throw new \Armes\Exception\ParseException('Invalid JSON payload for :type:' . $type, 0, $error);
+            }
+        }
+
         return match ($type) {
             'string' => Node::value('string', is_scalar($rawValue) || $rawValue === null ? (string) $rawValue : json_encode($rawValue, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES), $meta),
             'int' => Node::value('int', (int) (is_scalar($rawValue) || $rawValue === null ? $rawValue : 0), $meta),

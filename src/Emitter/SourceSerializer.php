@@ -98,6 +98,10 @@ final class SourceSerializer
 
     private static function valueToSource(Node $node, string $operatorStyle, bool $explicitTypedValues): mixed
     {
+        // An object/array Value is an opaque literal, never tag-key shorthand.
+        if (in_array($node->type, ['object', 'array'], true)) {
+            return [ValueTypes::key((string) $node->type) => $node->value];
+        }
         if ($explicitTypedValues && ValueTypes::isCanonical((string) $node->type)) {
             return [ValueTypes::key((string) $node->type) => self::toSourceValue($node->value, $operatorStyle, $explicitTypedValues)];
         }

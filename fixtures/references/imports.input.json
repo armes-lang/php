@@ -1,0 +1,4 @@
+[
+  {":import":{"@":{"src":"./instance.armes.json","props":{"name":"Ada"}}}},
+  {":import":{"@":{"src":"./instance.armes.json","props":{"name":"Grace"}}}}
+]

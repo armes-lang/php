@@ -78,7 +78,7 @@ final class ArmesEmitter
     private function emitValue(Node $node, int $depth, bool $pretty, string $operatorStyle, string $indent, bool $explicitTypedValues): string
     {
         $prefix = $pretty ? str_repeat($indent, $depth) : '';
-        if ($explicitTypedValues && ValueTypes::isCanonical((string) $node->type)) {
+        if (($explicitTypedValues || in_array($node->type, ['object', 'array'], true)) && ValueTypes::isCanonical((string) $node->type)) {
             return $this->emitTag(ValueTypes::tag((string) $node->type), [], [Node::value('string', $this->valueText($node->value))], $depth, $pretty, $operatorStyle, $indent, null, false, $explicitTypedValues);
         }
 

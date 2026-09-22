@@ -1,0 +1,4 @@
+{"section":{"#":[
+  {"Source":{"@":{"value":{":logic:var":"props.name"}}}},
+  {"Use":{"@":{"value":{":ref":"$/child/section/child/Source/props/value"}}}}
+]}}

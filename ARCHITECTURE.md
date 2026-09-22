@@ -4,8 +4,15 @@
 
 ARMES PHP v0 uses a compiler-style pipeline:
 
-```text
-source -> parser/normalizer -> ARMES Tree -> runtime resolver -> mapper -> emitter
+```mermaid
+flowchart LR
+    Source["Source"] --> Parser["Parser / normalizer"]
+    Parser --> Tree["ARMES tree"]
+    Tree --> Runtime["Runtime resolver"]
+    Runtime --> Mapper["Mapper"]
+    Mapper --> Model["Target model"]
+    Model --> App["Application"]
+    Model --> Emitter["Emitter"]
 ```
 
 Each stage has one job:
@@ -17,22 +24,17 @@ Each stage has one job:
 
 ## Package Layout
 
-```text
-src/
-  Armes.php
-  Tree/
-  Parser/Json/
-  Parser/Markup/
-  Parser/Native/
-  Parser/Yaml/
-  Parser/Toml/
-  Parser/Pkl/
-  Runtime/
-  Mapper/
-  Render/
-  Emitter/
-  Exception/
-```
+| Location | Responsibility |
+| --- | --- |
+| `src/Armes.php` | Core facade |
+| `src/Tree/` | Canonical node model |
+| `src/Parser/` | JSON, ARMES (markup), YAML, TOML, and Pkl parsing |
+| `src/Parser/Native/` | Shared node-key normalization |
+| `src/Runtime/` | Commands, expressions, and references |
+| `src/Mapper/` | Target interpretation |
+| `src/Render/` | Render targets |
+| `src/Emitter/` | Output serialization |
+| `src/Exception/` | Library exceptions |
 
 The public PHP namespace is `Armes\...`, with the main facade at `Armes\Armes`.
 
@@ -169,3 +171,16 @@ The v0 implementation keeps the hot path straightforward:
 Large markup benchmarks disable metadata and compare structural fingerprints after reparsing the emitted HTML. This catches node/data loss without pretending serializer formatting must be byte-identical.
 
 Future optimizations can add compiled mapper plans, persistent import caches, and source-span toggles.
+
+
+## Opt-in reference runtime
+
+`Runtime/References/ReferenceSession` owns ephemeral identities, structural indexes,
+compiled reference descriptors, pinned source locations, revisions and symbolic
+normalization. `ReferenceEngine` extends the existing resolver hooks for props,
+iterations and imported roots. It does not replace the AST or mapper pipeline.
+`StructuralView` defers concrete tree materialization; cycles fail when a concrete
+tree is requested. `ResultAdapterRegistry` is immutable and separate from mappers.
+The PHP runtime remains synchronous and rebuilds its per-revision evaluation cache
+on transactions. The shared [reference contract](../../../docs/REFERENCES.md) is the
+source of semantics; PHP retains its existing import/target-specific capabilities.

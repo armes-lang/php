@@ -42,6 +42,11 @@ final class Armes
         $this->renderTargets = $renderTargets ?? self::defaultRenderTargets();
     }
 
+    public function referenceSession(Node $tree, array $options = []): \Armes\Runtime\References\ReferenceSession
+    {
+        return new \Armes\Runtime\References\ReferenceSession($tree, ['parser'=>$this->parser, ...$options]);
+    }
+
     public static function default(): self
     {
         return new self();

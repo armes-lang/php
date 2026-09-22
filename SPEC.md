@@ -74,9 +74,21 @@ Unknown explicit Type or Logic commands throw `ParseException` in strict parsing
 
 `LogicEvaluator` evaluates canonical Logic nodes against a context map. Supported shared operators are:
 
-```text
-eq ne gt gte lt lte and or not add sub mul div mod var
-```
+- [`:logic:eq`](docs/logic.md#logiceq) — equal.
+- [`:logic:ne`](docs/logic.md#logicne) — not equal.
+- [`:logic:gt`](docs/logic.md#logicgt) — greater than.
+- [`:logic:gte`](docs/logic.md#logicgte) — greater or equal.
+- [`:logic:lt`](docs/logic.md#logiclt) — less than.
+- [`:logic:lte`](docs/logic.md#logiclte) — less or equal.
+- [`:logic:and`](docs/logic.md#logicand) — all conditions.
+- [`:logic:or`](docs/logic.md#logicor) — any condition.
+- [`:logic:not`](docs/logic.md#logicnot) — negate.
+- [`:logic:add`](docs/logic.md#logicadd) — add.
+- [`:logic:sub`](docs/logic.md#logicsub) — subtract.
+- [`:logic:mul`](docs/logic.md#logicmul) — multiply.
+- [`:logic:div`](docs/logic.md#logicdiv) — divide.
+- [`:logic:mod`](docs/logic.md#logicmod) — remainder.
+- [`:logic:var`](docs/logic.md#logicvar) — context lookup.
 
 Symbol source aliases normalize before evaluation. No source alias appears in canonical `op` values.
 
@@ -219,8 +231,12 @@ Canonical Logic JSON uses `kind`, canonical `op`, and `args`. Canonical typed Va
 
 `Armes::render()` performs:
 
-```text
-resolve -> target lookup -> MappingContext -> mapper -> emitter
+```mermaid
+flowchart LR
+    Resolve["Resolve commands"] --> Target["Look up target"]
+    Target --> Context["Create MappingContext"]
+    Context --> Mapper["Map structure"]
+    Mapper --> Emitter["Emit output"]
 ```
 
 Built-in registered targets are HTML, JSX, and XML. YAML, TOML, and Pkl helpers resolve and then serialize tree data through their format emitters.
@@ -244,3 +260,14 @@ Loose parsing preserves unknown explicit domain source safely and reports diagno
 - TypeScript legacy raw expressions support `in`; PHP does not. `:logic:in` is not portable or supported.
 - React runtime output belongs to TypeScript's external React mapper; PHP emits JSX-like source only.
 - XML parser backends differ, so portable documents should use the documented ARMES command forms and depend on structural rather than byte-identical output.
+
+
+## Opt-in destination references
+
+`Armes::referenceSession()` enables the shared [reference specification](../../../docs/REFERENCES.md).
+`:ref` is recognized only at expression-capable locations. Its compiled target is
+the consuming value plan, and graph edges represent reads/invalidation. Nested
+legacy data and typed literal containers do not become executable by syntax alone.
+`$` is document-instance local, including each imported occurrence. Generated keys
+are producer-local structural addresses; runtime node identities never serialize.
+PHP providers are synchronous, with atomic publication at the end of `resolve()`.

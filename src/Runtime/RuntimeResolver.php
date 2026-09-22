@@ -9,7 +9,7 @@ use Armes\Exception\RuntimeResolutionException;
 use Armes\Parser\Json\JsonTagParser;
 use Armes\Tree\Node;
 
-final class RuntimeResolver
+class RuntimeResolver
 {
     /** @var list<array{level: string, message: string}> */
     private array $diagnostics = [];
@@ -46,7 +46,7 @@ final class RuntimeResolver
      * @param list<string> $importStack
      * @return list<Node>
      */
-    private function resolveToList(Node $node, array $context, ?string $parentKind, array $importStack): array
+    protected function resolveToList(Node $node, array $context, ?string $parentKind, array $importStack): array
     {
         return match ($node->kind) {
             Node::FRAGMENT => $this->resolveChildren($node->children, $context, null, $importStack),
@@ -163,7 +163,7 @@ final class RuntimeResolver
                 $indexName => $index,
                 'key' => $key,
             ];
-            array_push($resolved, ...$this->resolveChildren($node->children, $loopContext, null, $importStack));
+            array_push($resolved, ...$this->resolveIteration($node, $loopContext, $importStack, $key, $items));
             $index++;
         }
 
@@ -198,7 +198,7 @@ final class RuntimeResolver
         ];
 
         $tree = $this->loadImport($path);
-        $resolvedList = $this->resolveToList($tree, $importContext, null, [...$importStack, $path]);
+        $resolvedList = $this->resolveImportedTree($tree, $importContext, [...$importStack, $path], $node);
         $resolved = count($resolvedList) === 1 ? $resolvedList[0] : Node::fragment($resolvedList, $tree->meta);
         $slotChildren = $node->children === []
             ? []
@@ -211,9 +211,18 @@ final class RuntimeResolver
         return $resolved->kind === Node::FRAGMENT ? $resolved->children : [$resolved];
     }
 
-    /**
-     * @param list<Node> $slotChildren
-     */
+    /** Existing loop behavior with a hook for instance-local session evaluation. */
+    protected function resolveIteration(Node $node, array $context, array $stack, int|string $key, mixed $items): array
+    {
+        return $this->resolveChildren($node->children, $context, null, $stack);
+    }
+
+    protected function resolveImportedTree(Node $tree, array $context, array $stack, Node $owner): array
+    {
+        return $this->resolveToList($tree, $context, null, $stack);
+    }
+
+    /** @param list<Node> $slotChildren */
     private function appendSlotChildren(Node $node, array $slotChildren): Node
     {
         if ($node->kind === Node::ELEMENT) {
@@ -265,7 +274,7 @@ final class RuntimeResolver
      * @param list<string> $importStack
      * @return array<string, mixed>
      */
-    private function resolveProps(array $props, array $context, array $importStack): array
+    protected function resolveProps(array $props, array $context, array $importStack): array
     {
         $resolved = [];
         foreach ($props as $key => $value) {
@@ -283,7 +292,7 @@ final class RuntimeResolver
      * @param list<string> $importStack
      * @return array<string, mixed>
      */
-    private function resolveModifierProps(Node $node, array $context, array $importStack): array
+    protected function resolveModifierProps(Node $node, array $context, array $importStack): array
     {
         $value = $node->value;
         if ($value === null && $node->props !== []) {
@@ -299,7 +308,7 @@ final class RuntimeResolver
      * @param array<string, mixed> $context
      * @param list<string> $importStack
      */
-    private function resolvePropValue(mixed $value, array $context, array $importStack): mixed
+    protected function resolvePropValue(mixed $value, array $context, array $importStack): mixed
     {
         if ($value instanceof Node) {
             if ($value->kind === Node::VALUE) {
@@ -354,7 +363,7 @@ final class RuntimeResolver
         return [];
     }
 
-    private function inferType(mixed $value): string
+    protected function inferType(mixed $value): string
     {
         return match (true) {
             is_string($value) => 'string',
@@ -373,7 +382,7 @@ final class RuntimeResolver
         return $this->parser ?? new JsonTagParser();
     }
 
-    private function logic(): LogicEvaluator
+    protected function logic(): LogicEvaluator
     {
         return $this->logic ?? new LogicEvaluator();
     }

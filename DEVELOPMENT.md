@@ -6,8 +6,15 @@ This guide is for people changing ARMES PHP itself. If you only want to use the 
 
 ARMES is a compiler-style tree processor:
 
-```text
-source -> parser/normalizer -> ARMES Tree -> runtime resolver -> mapper -> emitter
+```mermaid
+flowchart LR
+    Source["Source"] --> Parser["Parser / normalizer"]
+    Parser --> Tree["ARMES tree"]
+    Tree --> Runtime["Runtime resolver"]
+    Runtime --> Mapper["Mapper"]
+    Mapper --> Model["Target model"]
+    Model --> App["Application"]
+    Model --> Emitter["Emitter"]
 ```
 
 Keep those stages separate:
@@ -47,27 +54,25 @@ Run the markup benchmark when changing `DomMarkupParser`, `HtmlEmitter`, `XmlEmi
 
 ## Repository Map
 
-```text
-src/
-  Armes.php        facade for parse, resolve, render helpers
-  Tree/                   canonical ARMES Tree node model
-  Parser/Native/          shared tag-key normalizer for decoded native data
-  Parser/Json/            JSON decode + native normalizer
-  Parser/Markup/          HTML/XML DOMDocument parser
-  Parser/Yaml/            Symfony YAML decode + native normalizer
-  Parser/Toml/            devium/toml decode + native normalizer
-  Parser/Pkl/             pkl CLI JSON bridge + native normalizer
-  Runtime/                runtime node resolver and expression evaluator
-  Mapper/                 target model mapping
-  Render/                 render target registry and target facade objects
-  Emitter/                output serializers
-  Exception/              project exception types
-
-fixtures/                 portable inputs and expected outputs
-tests/                    PHPUnit coverage
-examples/                 runnable browser/CLI examples
-benchmarks/               performance scripts and large HTML input
-```
+| Location | Responsibility |
+| --- | --- |
+| `src/Armes.php` | facade for parse, resolve, render helpers |
+| `src/Tree/` | canonical ARMES Tree node model |
+| `src/Parser/Native/` | shared tag-key normalizer for decoded native data |
+| `src/Parser/Json/` | JSON decode + native normalizer |
+| `src/Parser/Markup/` | HTML/XML DOMDocument parser |
+| `src/Parser/Yaml/` | Symfony YAML decode + native normalizer |
+| `src/Parser/Toml/` | devium/toml decode + native normalizer |
+| `src/Parser/Pkl/` | pkl CLI JSON bridge + native normalizer |
+| `src/Runtime/` | runtime node resolver and expression evaluator |
+| `src/Mapper/` | target model mapping |
+| `src/Render/` | render target registry and target facade objects |
+| `src/Emitter/` | output serializers |
+| `src/Exception/` | project exception types |
+| `fixtures/` | portable inputs and expected outputs |
+| `tests/` | PHPUnit coverage |
+| `examples/` | runnable browser/CLI examples |
+| `benchmarks/` | performance scripts and large HTML input |
 
 Docs:
 
@@ -148,8 +153,11 @@ Mapper and emitter are different jobs:
 
 For tag-like output, prefer:
 
-```text
-Node -> HtmlMapper/ReactMapper -> TargetNode -> Emitter
+```mermaid
+flowchart LR
+    Node["Resolved node"] --> Mapper["HTML or React mapper"]
+    Mapper --> Target["Target node"]
+    Target --> Emitter["Emitter"]
 ```
 
 For storage/config output, use `JsonEmitter::toData()` to turn a resolved tree into `canonical`, `compact`, or `tagged` data, then serialize that data.
@@ -170,14 +178,13 @@ Fixtures should stay portable for future TypeScript/JavaScript implementations.
 
 Use this pattern:
 
-```text
-fixtures/
-  json/
-  runtime/
-  import/
-  markup/
-  formats/
-```
+| Fixture directory | Covers |
+| --- | --- |
+| `fixtures/json/` | Node-key source |
+| `fixtures/runtime/` | Commands and expressions |
+| `fixtures/import/` | Imported documents |
+| `fixtures/markup/` | Tag syntax |
+| `fixtures/formats/` | Other source formats |
 
 When changing syntax, add or update:
 
