@@ -80,7 +80,7 @@ final class NativeTagParser
     private function parseMap(array $entries, array $meta): Node
     {
         if ($entries === []) {
-            return Node::value('object', [], $meta);
+            return Node::value('object', new stdClass(), $meta);
         }
 
         $nodes = [];
@@ -99,6 +99,23 @@ final class NativeTagParser
      */
     private function parseKeyedNode(string $key, mixed $value, array $meta): Node
     {
+        if ($this->isMap($value)) {
+            $entries = $this->mapEntries($value);
+            $props = isset($entries['@']) && $this->isMap($entries['@']) ? $this->mapEntries($entries['@']) : [];
+            if (array_key_exists(':id',$props)) {
+                $id=$props[':id']; if(!is_string($id)||$id==='')$this->fail(':id requires a nonempty string.',$meta);
+                unset($props[':id']);$entries['@']=$props;
+                $op=LogicOperators::normalizeDirect($key);$type=ValueTypes::normalize($key);
+                $payload=$entries['#']??[];
+                if($type!==null){$payload=is_array($payload)&&array_is_list($payload)&&count($payload)===1?$payload[0]:$payload;$node=$this->explicitValueNode($type,$payload,$meta);}
+                elseif(isset(self::STRUCTURAL_VALUE_RUNTIME[substr($key,1)])){$payload=is_array($payload)&&count($payload)===1?$payload[0]:$payload;$node=$this->explicitStructuralValueNode(substr($key,1),$payload,$meta);}
+                elseif($key===':ref'&&$props===[]&&is_array($payload)&&count($payload)===1)$node=$this->parseRuntime('ref',$payload[0],$meta);
+                elseif($op!==null)$node=$this->parseLogic($op,$payload,$meta);
+                elseif(in_array($key,[':expr',':props',':attributes'],true)){$payload=is_array($payload)&&count($payload)===1?$payload[0]:$payload;$node=$this->parseKeyedNode($key,$payload,$meta);}
+                else $node=$this->parseKeyedNode($key,$entries,$meta);
+                return $node->withSemanticId($id);
+            }
+        }
         $directLogicOp = LogicOperators::normalizeDirect($key);
         if ($directLogicOp !== null) {
             return $this->parseLogic($directLogicOp, $value, $meta);
@@ -439,9 +456,9 @@ final class NativeTagParser
 
             $result = [];
             foreach ($entries as $key => $childValue) {
-                $result[$key] = $this->parsePropValue($childValue, $this->appendPointer($meta, $key));
+                $result[$key] = $this->parsePropValue($childValue, $this->appendPointer($meta, (string)$key));
             }
-            return $result;
+            return $value instanceof stdClass && array_is_list($result) ? (object)$result : $result;
         }
 
         if (is_array($value)) {
@@ -475,7 +492,7 @@ final class NativeTagParser
             'bool' => Node::value('bool', filter_var($value, FILTER_VALIDATE_BOOLEAN), $meta),
             'null' => Node::value('null', null, $meta),
             'array' => Node::value('array', array_values((array) $this->toPlainData($value)), $meta),
-            'object' => Node::value('object', (array) $this->toPlainData($value), $meta),
+            'object' => Node::value('object', $this->objectData($value), $meta),
             default => Node::value($type, $this->toPlainData($value), $meta),
         };
     }
@@ -552,7 +569,7 @@ final class NativeTagParser
             foreach (get_object_vars($value) as $key => $childValue) {
                 $result[$key] = $this->toPlainData($childValue);
             }
-            return $result;
+            return array_is_list($result) ? (object)$result : $result;
         }
 
         if (is_array($value)) {
@@ -564,6 +581,12 @@ final class NativeTagParser
         }
 
         return $value;
+    }
+
+    private function objectData(mixed $value): mixed
+    {
+        $data = $this->toPlainData($value);
+        return $data instanceof stdClass ? $data : (array_is_list((array)$data) ? (object)$data : (array)$data);
     }
 
     private function isMap(mixed $value): bool

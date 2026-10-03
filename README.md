@@ -116,3 +116,20 @@ echo $core->renderHtml($tree);
 - **Render output:** `$core->renderHtml($tree)` evaluates commands, maps the result, and writes HTML.
 
 Continue to the **[API guide](docs/integration.md)** for application data, loading documents, mapping, and references.
+
+### Compact reference reads
+
+```php
+$tree = $core->parseJson(
+    '{"Widget":{"@":{"value":{":ref":"./data.yaml::$[value]"}}}}',
+    '/workspace/main.armes.json',
+);
+$session = $core->referenceSession($tree, [
+    'loader' => new \Armes\Loader\MemorySourceLoader([
+        '/workspace/data.yaml' => 'value: 7',
+    ]),
+]);
+$snapshot = $session->resolve();
+```
+
+PHP shares the [compact/legacy syntax and inline source contract](docs/reference-syntax.md), typed data/document loading, semantic IDs, keyed/named outputs and demand-driven dependencies. Filesystem loaders require allowed roots. PHP remains synchronous; read data objects are detached from parsed-resource caches. See [qs boundaries](docs/reference-qs.md) and [migration/host differences](docs/reference-migration.md). No new directive variants or executable source engines are introduced.

@@ -1,0 +1,59 @@
+{
+  "selectors": [
+    {"path":"$[users][ada][name]","value":"Ada"},
+    {"path":"$[rows][0][name]","value":"Ada"},
+    {"path":"$[rows][][name]","value":["Ada","Grace"]},
+    {"path":"$[matrix][][]","value":[1,2,3]},
+    {"path":"$[empty][]","value":[]},
+    {"path":"$[flags][false]","value":false},
+    {"path":"$[flags][zero]","value":0},
+    {"path":"$[flags][null]","value":null},
+    {"path":"$[flags][empty]","value":""},
+    {"path":"$[numeric][0]","value":"zero"},
+    {"path":"$[numeric][01]","value":"leading"},
+    {"path":"$[numeric][\"0\"]","value":"zero"},
+    {"path":"$[\"a[b]\"][\"x/y\"]","value":7},
+    {"path":"$[dots][a.b]","value":"dot"},
+    {"path":"$[dots][a%2Eb]","value":"percent"},
+    {"path":"$[literal]","value":{":ref":"not executable","kind":"data","props":2,"meta":3}}
+  ],
+  "errors": [
+    {"path":"$[rows][ada]","code":"selection-kind"},
+    {"path":"$[rows][\"0\"]","code":"selection-kind"},
+    {"path":"$[users][]","code":"selection-kind"},
+    {"path":"$[rows][100]","code":"missing-reference"},
+    {"path":"$[users][missing]","code":"missing-reference"},
+    {"path":"$[flags][missing]","code":"missing-reference"},
+    {"path":"$[rows][][missing]","code":"missing-reference"},
+    {"path":"$[__proto__]","code":"unsafe-member"}
+  ],
+  "data": {
+    "users":{"ada":{"name":"Ada"}},
+    "rows":[{"id":"ada","name":"Ada"},{"id":"grace","name":"Grace"}],
+    "matrix":[[1,2],[3]],"empty":[],
+    "flags":{"false":false,"zero":0,"null":null,"empty":""},
+    "numeric":{"0":"zero","01":"leading"},
+    "a[b]":{"x/y":7},"dots":{"a.b":"dot","a%2Eb":"percent"},
+    "literal":{":ref":"not executable","kind":"data","props":2,"meta":3}
+  },
+  "json":[
+    {"section":{"#":[
+      {"data":{"@":{":id":"source-value","value":7,"config":{"theme":{"colors":["red","blue"]}}}}},
+      {"Row":{"@":{"value":1}}},{"Row":{"@":{"value":2}}},
+      {"Use":{"@":{
+        "absolute":{":ref":"$/section/data/@value"},
+        "relative":{":ref":"../data/@value"},
+        "stable":{":ref":"#source-value/@value"},
+        "repeated":{":ref":"$/section/Row[1]/@value"},
+        "indexed":{":ref":"$/section/[1]/@value"},
+        "nested":{":ref":"$/section/data/@config[theme][colors][0]"},
+        "sum":{":logic:add":[{":ref":"#source-value/@value"},2]},
+        "list":{":ref":{"path":["#source-value/@value","#source-value/@value"]}},
+        "named":{":ref":{"path":{"first":"#source-value/@value"}}}
+      }}}
+    ]}}
+  ],
+  "expected":{"absolute":7,"relative":7,"stable":7,"repeated":2,"indexed":1,"nested":"red","sum":9,"list":[7,7],"named":{"first":7}},
+  "markup":"<section><data :id=\"source-value\" value=\"{:type:int 7}\"/><Use value=\"{:logic:add {:ref #source-value/@value} 2}\" config='{:type:object {\"name\":\"Demo\",\"value\":{:ref \"#source-value/@value\"},\"double\":{:logic:mul {:ref \"#source-value/@value\"} 2}}}'/></section>",
+  "markupExpected":{"value":9,"config":{"name":"Demo","value":7,"double":14}}
+}

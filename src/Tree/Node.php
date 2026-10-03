@@ -30,6 +30,7 @@ final class Node
         public readonly array $meta = [],
         public readonly ?string $op = null,
         public readonly array $args = [],
+        public readonly ?string $semanticId = null,
     ) {
         if (!in_array($kind, [self::ELEMENT, self::RUNTIME, self::VALUE, self::FRAGMENT, self::LOGIC], true)) {
             throw new InvalidArgumentException(sprintf('Unknown ARMES node kind "%s".', $kind));
@@ -92,7 +93,7 @@ final class Node
      */
     public function withProps(array $props): self
     {
-        return new self($this->kind, $this->name, $props, $this->children, $this->type, $this->value, $this->meta, $this->op, $this->args);
+        return new self($this->kind, $this->name, $props, $this->children, $this->type, $this->value, $this->meta, $this->op, $this->args, $this->semanticId);
     }
 
     /**
@@ -100,18 +101,29 @@ final class Node
      */
     public function withChildren(array $children): self
     {
-        return new self($this->kind, $this->name, $this->props, self::assertChildren($children), $this->type, $this->value, $this->meta, $this->op, $this->args);
+        return new self($this->kind, $this->name, $this->props, self::assertChildren($children), $this->type, $this->value, $this->meta, $this->op, $this->args, $this->semanticId);
     }
 
     public function withValue(mixed $value): self
     {
-        return new self($this->kind, $this->name, $this->props, $this->children, $this->type, $value, $this->meta, $this->op, $this->args);
+        return new self($this->kind, $this->name, $this->props, $this->children, $this->type, $value, $this->meta, $this->op, $this->args, $this->semanticId);
     }
 
     /**
      * @return array<string, mixed>
      */
+    public function withSemanticId(?string $id): self
+    {
+        if ($id !== null && ($id === '' || $this->kind === self::FRAGMENT)) throw new InvalidArgumentException('Semantic IDs require nonempty authored node IDs.');
+        return new self($this->kind,$this->name,$this->props,$this->children,$this->type,$this->value,$this->meta,$this->op,$this->args,$id);
+    }
     public function toArray(): array
+    {
+        $result = $this->arrayWithoutIdentity();
+        if ($this->semanticId !== null) $result['semanticId']=$this->semanticId;
+        return $result;
+    }
+    private function arrayWithoutIdentity(): array
     {
         if ($this->kind === self::VALUE) {
             $result = [
@@ -181,6 +193,10 @@ final class Node
      * @param array<string, mixed> $data
      */
     public static function fromArray(array $data): self
+    {
+        return self::arrayWithoutIdentityToNode($data)->withSemanticId($data['semanticId'] ?? null);
+    }
+    private static function arrayWithoutIdentityToNode(array $data): self
     {
         $kind = $data['kind'] ?? null;
         return match ($kind) {
@@ -264,7 +280,7 @@ final class Node
 
     private static function valueFromArray(mixed $value): mixed
     {
-        if (is_array($value) && isset($value['kind'])) {
+        if (is_array($value) && isset($value['kind']) && in_array($value['kind'],[self::ELEMENT,self::RUNTIME,self::VALUE,self::FRAGMENT,self::LOGIC],true)) {
             return self::fromArray($value);
         }
         if (is_array($value)) {

@@ -45,3 +45,6 @@ Rules:
 - Emitters serialize mapped output; they should not parse ARMES source or resolve runtime nodes.
 - Runtime nodes beginning with `:` should be resolved before final mapping.
 - Headless UI is an example only, never a hardcoded dependency.
+## Reference changes
+
+Keep the common docs/REFERENCE-SYNTAX.md contract and fixtures/references/compact-contract.json in TS/PHP parity. :ref is lookup/read; :import is composition. Do not query-string-coerce typed values or make plain JSON strings executable. Data resource parsing must not execute directive keys. Preserve semantic :id independently of HTML/editor IDs. Explicitly record host API differences in docs/reference-migration.md.

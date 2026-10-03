@@ -184,3 +184,9 @@ tree is requested. `ResultAdapterRegistry` is immutable and separate from mapper
 The PHP runtime remains synchronous and rebuilds its per-revision evaluation cache
 on transactions. The shared [reference contract](../../../docs/REFERENCES.md) is the
 source of semantics; PHP retains its existing import/target-specific capabilities.
+
+## Compact references and resources
+
+PHP's current output parser and registry retain the previous #result default alias and string result storage key. TS now separates default # from independently named #result outputs; PHP needs corresponding parser, registry, formatter and snapshot changes before those selectors can be portable. This is a recorded parity gap, not a PHP implementation change.
+
+ReferenceSyntax normalizes compact/legacy selectors and resource specifications. ReferenceIndex indexes authored children and semantic IDs; ResultAdapterRegistry owns computational default/named outputs and external-read permission. ReferenceState caches normalized syntax and parsed resources separately from per-run values. ResourceStore pins content by URI, enforces source/root/work limits and validates the snapshot before publication. Loader/ParserRegistry distinguish data decoding from document parsing; data never passes through directive execution. InlineExpression lowers recursive attribute syntax through NativeTagParser and existing aliases. SourceSerializer/ArmesEmitter preserve symbolic directives and :id. See the packaged reference-syntax, reference-qs and reference-migration documents.

@@ -24,10 +24,25 @@ final class SourceSerializer
             return $result;
         }
 
+        if ($value instanceof \stdClass) {
+            return (object)array_map(fn ($child) => self::toSourceValue($child, $operatorStyle, $explicitTypedValues), get_object_vars($value));
+        }
+
         return $value;
     }
 
     public static function toSourceNode(Node $node, string $operatorStyle = 'readable', bool $explicitTypedValues = false): mixed
+    {
+        $source=self::sourceWithoutIdentity($node,$operatorStyle,$explicitTypedValues);
+        if($node->semanticId===null)return $source;
+        if($node->kind===Node::FRAGMENT)throw new \InvalidArgumentException('Synthetic fragments cannot declare semantic IDs.');
+        $key=array_key_first($source);$body=$source[$key];
+        if($node->kind===Node::ELEMENT||$node->kind===Node::RUNTIME&&($node->name==='if'||$node->children||$node->props)){
+            $body=is_array($body)&&!array_is_list($body)?$body:['#'=>$body];$body['@']=[...($body['@']??[]),':id'=>$node->semanticId];
+        }else $body=['@'=>[':id'=>$node->semanticId],'#'=>$node->kind===Node::LOGIC?$body:[$body]];
+        return [$key=>$body];
+    }
+    private static function sourceWithoutIdentity(Node $node, string $operatorStyle = 'readable', bool $explicitTypedValues = false): mixed
     {
         return match ($node->kind) {
             Node::FRAGMENT => array_map(fn (Node $child): mixed => self::toSourceNode($child, $operatorStyle, $explicitTypedValues), $node->children),
@@ -102,9 +117,10 @@ final class SourceSerializer
         if (in_array($node->type, ['object', 'array'], true)) {
             return [ValueTypes::key((string) $node->type) => $node->value];
         }
-        if ($explicitTypedValues && ValueTypes::isCanonical((string) $node->type)) {
+        if (($explicitTypedValues || $node->semanticId !== null) && ValueTypes::isCanonical((string) $node->type)) {
             return [ValueTypes::key((string) $node->type) => self::toSourceValue($node->value, $operatorStyle, $explicitTypedValues)];
         }
+        if ($node->semanticId !== null) return [':' . $node->type => $node->value];
 
         return match ($node->type) {
             'string', 'int', 'float', 'bool', 'null', 'array', 'object', 'text' => self::toSourceValue($node->value, $operatorStyle, $explicitTypedValues),

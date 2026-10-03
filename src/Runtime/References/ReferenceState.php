@@ -6,7 +6,7 @@ use Armes\Tree\Node;
 final class ReferenceState
 {
     public \WeakMap $ids;
-    public array $pins = [], $locations = [], $locationPaths = [], $imports = [], $versions = [], $generatedPins = [];
+    public array $pins = [], $locations = [], $locationPaths = [], $imports = [], $versions = [], $generatedPins = [], $resourceCache=[], $compiledReferences=[];
     private int $next = 0;
     public function __construct() { $this->ids = new \WeakMap(); }
     public function id(Node $node): string { return $this->ids[$node] ??= 'n'.++$this->next; }

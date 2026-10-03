@@ -214,7 +214,10 @@ final class DomMarkupParser
         $children = [];
         $index = 0;
         $parentName = $node instanceof DOMElement ? strtolower($node->tagName) : null;
+        $sourceParentName = $node instanceof DOMElement ? $this->restoreTagName($node->tagName) : '';
+        $logicChildren = str_starts_with($sourceParentName, ':') && ($this->logicOperatorFromMarkupName($sourceParentName) !== null || LogicOperators::normalize(substr($sourceParentName, 1), true) !== null);
         foreach ($node->childNodes as $child) {
+            if ($logicChildren && $child instanceof DOMText && trim($child->nodeValue) === '') { $index++; continue; }
             $converted = $this->convertNode($child, $options, $sourceName, $pointer . '/' . $index, $parentName, true);
             if ($converted !== null) {
                 $children[] = $converted;
@@ -228,6 +231,20 @@ final class DomMarkupParser
     }
 
     private function convertNode(
+        DOMNode $node,
+        MarkupParseOptions $options,
+        ?string $sourceName,
+        string $pointer,
+        ?string $parentName,
+        bool $sourceHadDoctype,
+    ): ?Node {
+        $result=$this->convertNodeWithoutIdentity($node,$options,$sourceName,$pointer,$parentName,$sourceHadDoctype);
+        if($result&&$node instanceof DOMElement){
+            $id=null;foreach($node->attributes as $attribute)if($this->restoreAttributeName($attribute->nodeName)===':id')$id=$attribute->nodeValue;
+            if($id!==null){if($id==='')throw new ParseException(':id requires a nonempty string.');$result=$result->withSemanticId($id);}
+        }return $result;
+    }
+    private function convertNodeWithoutIdentity(
         DOMNode $node,
         MarkupParseOptions $options,
         ?string $sourceName,
@@ -249,7 +266,8 @@ final class DomMarkupParser
 
         if ($node instanceof DOMElement) {
             $name = $this->restoreTagName($node->tagName);
-            $props = $this->attributes($node);
+            $props = $this->attributes($node,$sourceName,$options);
+            unset($props[':id']);
             $children = isset(self::VOID_ELEMENTS[strtolower($name)])
                 ? []
                 : $this->convertChildren($node, $options, $sourceName, $pointer);
@@ -274,7 +292,15 @@ final class DomMarkupParser
                         $node,
                     ));
                 }
+                if (in_array($runtimeName,['comment','doctype','cdata','raw','text'],true)) {
+                    return Node::value($runtimeName,implode('',array_map(fn(Node $child)=>$child->kind===Node::VALUE?(string)($child->value??''):'',$children)),$this->meta($options,$sourceName,$pointer,$node));
+                }
 
+                if ($runtimeName==='expr'&&count($children)===1&&$children[0]->kind===Node::VALUE&&$children[0]->type==='string') {
+                    try {return (new \Armes\Parser\Native\NativeTagParser())->parse([':expr'=>json_decode(trim($children[0]->value),false,256,JSON_THROW_ON_ERROR)],$sourceName);}
+                    catch(\JsonException $e){throw new ParseException('Malformed :expr JSON payload.',0,$e);}
+                }
+                if ($runtimeName==='props'||$runtimeName==='attributes') return Node::runtime($runtimeName,[], $children, $props, $this->meta($options,$sourceName,$pointer,$node));
                 if ($runtimeName === 'logic') {
                     return count($children) === 1 ? $children[0] : Node::fragment($children, $this->meta($options, $sourceName, $pointer, $node));
                 }
@@ -324,7 +350,8 @@ final class DomMarkupParser
     /**
      * @return array<string, mixed>
      */
-    private function attributes(DOMElement $element): array
+    public static function isBooleanAttribute(string $name):bool {return isset(self::BOOLEAN_ATTRIBUTES[strtolower($name)]);}
+    private function attributes(DOMElement $element,?string $sourceName=null,?MarkupParseOptions $options=null): array
     {
         $props = [];
         foreach ($element->attributes as $attribute) {
@@ -334,6 +361,12 @@ final class DomMarkupParser
             $lowerName = strtolower($name);
             $isBooleanAttribute = isset(self::BOOLEAN_ATTRIBUTES[$lowerName])
                 && ($value === '' || strcasecmp($value, $name) === 0);
+            $trimmed=trim($value);
+            if(str_starts_with($trimmed,'{:'))$value=InlineExpression::parse($value,($sourceName??'markup').':line '.$element->getLineNo().' attribute '.$name,$options?->inlineDepth??64,$options?->inlineTokens??100000);
+            elseif(str_contains($value,'\\{:'))$value=str_replace('\\{:','{:',$value);
+            elseif(str_starts_with($trimmed,'{')||str_starts_with($trimmed,'[')){
+                try{$decoded=json_decode($trimmed,false,256,JSON_THROW_ON_ERROR);$value=(new \Armes\Parser\Native\NativeTagParser())->parse(['X'=>['@'=>[$name=>$decoded]]])->props[$name];}catch(\JsonException){}
+            }
             $props[$name] = $isBooleanAttribute ? true : $value;
         }
         return $props;

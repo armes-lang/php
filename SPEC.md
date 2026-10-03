@@ -271,3 +271,9 @@ legacy data and typed literal containers do not become executable by syntax alon
 `$` is document-instance local, including each imported occurrence. Generated keys
 are producer-local structural addresses; runtime node identities never serialize.
 PHP providers are synchronous, with atomic publication at the end of `resolve()`.
+
+## Explicit reference contract
+
+The current reference and inline-expression contract is specified in [Reference Syntax](../../../docs/REFERENCE-SYNTAX.md). PHP implements the earlier selector grammar through its synchronous ReferenceSession. In particular, PHP still requires #result for default output and automatically recognizes typed path heads; it does not yet implement TS's October 2 default # / independent named #result selectors or explicit v1 compatibility option. The newer TS literal-key/resource-splitting fixes also remain pending PHP parity. Shared earlier fixtures do not establish parity for those changes. No new node kinds or execution engine are introduced.
+
+The [qs lookup boundary](docs/reference-qs.md) and [migration/identity rules](docs/reference-migration.md) are part of this contract. Source data objects retain empty/numeric object shape; PHP detaches read data from cached resources. External result handlers require explicit read permission. PHP async/cancellation and TS multi-document editing-preview APIs are not claimed as parity.

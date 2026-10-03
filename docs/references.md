@@ -1,5 +1,8 @@
 # References
 
+The current compact, external-resource and recursive inline syntax is specified in [Reference Syntax](reference-syntax.md). Legacy typed paths below remain supported; their interpretation never depends on target existence. See the migration preview before rewriting documents.
+
+
 [Language](README.md) · [Next: Formats](formats.md)
 
 Use a reference when one value should come from another location in the document. The application must enable a **reference session**; ordinary rendering does not enable this automatically.

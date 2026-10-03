@@ -30,6 +30,7 @@ final readonly class StructuralAddress
     }
     public function __toString(): string
     {
+        foreach ($this->segments as $segment) if (in_array($segment['kind'], ['data', 'all', 'occurrence'], true) || isset($segment['output'])) return ReferenceSyntax::compact($this);
         $source='$';
         foreach ($this->segments as $s) $source.='/'.$s['kind'].(count($s)>1?'/'.str_replace(['~','/'],['~0','~1'],(string)($s['name']??$s['index']??$s['key'])):'');
         return $source;

@@ -7,5 +7,5 @@ final class StructuralView
     public readonly string $kind;
     private ?Node $tree = null;
     public function __construct(public readonly array $source, public readonly int $revision, private readonly \Closure $resolve) { $this->kind='structure'; }
-    public function materialize(): Node { return $this->tree ??= ($this->resolve)(); }
+    public function materialize(): Node { return ReferenceTree::detach($this->tree ??= ($this->resolve)()); }
 }

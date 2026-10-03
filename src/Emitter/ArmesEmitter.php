@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Armes\Emitter;
 
+use Armes\Parser\Markup\InlineExpression;
 use Armes\Runtime\LogicOperators;
 use Armes\Runtime\ValueTypes;
 use Armes\Tree\Node;
@@ -30,7 +31,7 @@ final class ArmesEmitter
     {
         return match ($node->kind) {
             Node::FRAGMENT => implode($pretty ? "\n" : '', array_map(fn (Node $child): string => $this->emitNode($child, $depth, $pretty, $operatorStyle, $indent, $explicitTypedValues), $node->children)),
-            Node::ELEMENT => $this->emitTag((string) $node->name, $node->props, $node->children, $depth, $pretty, $operatorStyle, $indent, null, false, $explicitTypedValues),
+            Node::ELEMENT => $this->emitTag((string) $node->name, [...$node->props,...($node->semanticId!==null?[':id'=>$node->semanticId]:[])], $node->children, $depth, $pretty, $operatorStyle, $indent, null, false, $explicitTypedValues),
             Node::RUNTIME => $this->emitRuntime($node, $depth, $pretty, $operatorStyle, $indent, $explicitTypedValues),
             Node::VALUE => $this->emitValue($node, $depth, $pretty, $operatorStyle, $indent, $explicitTypedValues),
             Node::LOGIC => $this->emitLogic($node, $depth, $pretty, $operatorStyle, $indent, $explicitTypedValues),
@@ -40,8 +41,10 @@ final class ArmesEmitter
 
     private function emitRuntime(Node $node, int $depth, bool $pretty, string $operatorStyle, string $indent, bool $explicitTypedValues): string
     {
+        if ($node->name === 'ref' && (is_array($node->value)||$node->value instanceof \stdClass)) return $this->emitTag(':ref',[...(array)$node->value,...($node->semanticId!==null?[':id'=>$node->semanticId]:[])],[],$depth,$pretty,$operatorStyle,$indent,null,false,$explicitTypedValues);
+        if ($node->name === 'expr' && $node->value!==null) return $this->emitTag(':expr',$node->semanticId!==null?[':id'=>$node->semanticId]:[],[],$depth,$pretty,$operatorStyle,$indent,SourceSerializer::toSourceValue($node->value),false,$explicitTypedValues);
         if ($node->name === 'if') {
-            $props = $node->props;
+            $props = [...$node->props,...($node->semanticId!==null?[':id'=>$node->semanticId]:[])];
             $elseChildren = isset($props['else']) && is_array($props['else']) ? $props['else'] : [];
             unset($props['else']);
             $children = [];
@@ -67,19 +70,22 @@ final class ArmesEmitter
             ? null
             : $node->value;
 
-        return $this->emitTag(':' . $node->name, $props, $node->children, $depth, $pretty, $operatorStyle, $indent, $fallback, false, $explicitTypedValues);
+        return $this->emitTag(':' . $node->name, [...$props,...($node->semanticId!==null?[':id'=>$node->semanticId]:[])], $node->children, $depth, $pretty, $operatorStyle, $indent, $fallback, false, $explicitTypedValues);
     }
 
     private function emitLogic(Node $node, int $depth, bool $pretty, string $operatorStyle, string $indent, bool $explicitTypedValues): string
     {
-        return $this->emitTag(LogicOperators::tag((string) $node->op, $operatorStyle), [], $node->args, $depth, $pretty, $operatorStyle, $indent, null, true, $explicitTypedValues);
+        return $this->emitTag(LogicOperators::tag((string) $node->op, $operatorStyle), $node->semanticId!==null?[':id'=>$node->semanticId]:[], $node->args, $depth, $pretty, $operatorStyle, $indent, null, true, $explicitTypedValues);
     }
 
     private function emitValue(Node $node, int $depth, bool $pretty, string $operatorStyle, string $indent, bool $explicitTypedValues): string
     {
         $prefix = $pretty ? str_repeat($indent, $depth) : '';
-        if (($explicitTypedValues || in_array($node->type, ['object', 'array'], true)) && ValueTypes::isCanonical((string) $node->type)) {
-            return $this->emitTag(ValueTypes::tag((string) $node->type), [], [Node::value('string', $this->valueText($node->value))], $depth, $pretty, $operatorStyle, $indent, null, false, $explicitTypedValues);
+        if ($node->semanticId!==null && in_array($node->type,['comment','doctype','cdata','raw','text'],true)) {
+            return $this->emitTag(':'.$node->type,[':id'=>$node->semanticId],[Node::value('string',$this->valueText($node->value))],$depth,$pretty,$operatorStyle,$indent,null,false,$explicitTypedValues);
+        }
+        if (($explicitTypedValues || $node->semanticId!==null || in_array($node->type, ['object', 'array'], true)) && ValueTypes::isCanonical((string) $node->type)) {
+            return $this->emitTag(ValueTypes::tag((string) $node->type), $node->semanticId!==null?[':id'=>$node->semanticId]:[], [Node::value('string', $this->valueText($node->value))], $depth, $pretty, $operatorStyle, $indent, null, false, $explicitTypedValues);
         }
 
         return match ($node->type) {
@@ -139,7 +145,7 @@ final class ArmesEmitter
             return $this->emitNode($node, $depth, $pretty, $operatorStyle, $indent, $explicitTypedValues);
         }
 
-        return $this->emitTag(ValueTypes::tag((string) $node->type), [], [Node::value('string', $this->valueText($node->value))], $depth, $pretty, $operatorStyle, $indent, null, false, $explicitTypedValues);
+        return $this->emitTag(ValueTypes::tag((string) $node->type), $node->semanticId!==null?[':id'=>$node->semanticId]:[], [Node::value('string', $this->valueText($node->value))], $depth, $pretty, $operatorStyle, $indent, null, false, $explicitTypedValues);
     }
 
     /**
@@ -149,16 +155,13 @@ final class ArmesEmitter
     {
         $parts = [];
         foreach ($props as $name => $value) {
-            if ($value === false || $value === null) {
-                continue;
-            }
-            if ($value === true) {
+            if ($value === true && \Armes\Parser\Markup\DomMarkupParser::isBooleanAttribute($name)) {
                 $parts[] = $name;
                 continue;
             }
 
             $sourceValue = SourceSerializer::toSourceValue($value, $operatorStyle, $explicitTypedValues);
-            $text = is_string($sourceValue) ? $sourceValue : json_encode($sourceValue, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+            $text = $value instanceof Node ? InlineExpression::emit($value) : (is_int($value)||is_float($value)?'{:type:'.(is_int($value)?'int':'float').' '.json_encode($value).'}':(is_bool($value)?'{:type:bool '.($value?'true':'false').'}':($value===null?'{:type:null null}':(is_string($value)?str_replace('{:','\\{:',$value):json_encode($sourceValue,JSON_UNESCAPED_UNICODE|JSON_UNESCAPED_SLASHES)))));
             $quote = is_scalar($sourceValue) || $sourceValue === null ? '"' : "'";
             $parts[] = $name . '=' . $quote . $this->escapeAttribute((string) $text, $quote) . $quote;
         }

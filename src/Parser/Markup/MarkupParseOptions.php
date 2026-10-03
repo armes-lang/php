@@ -18,6 +18,8 @@ final class MarkupParseOptions
         public readonly bool $preserveDoctype = true,
         public readonly bool $includeMeta = true,
         public readonly ?int $libxmlOptions = null,
+        public readonly int $inlineDepth = 64,
+        public readonly int $inlineTokens = 100000,
     ) {
     }
 

@@ -18,6 +18,7 @@ final class ReferenceSession
     }
     public function tree():Node{return $this->tree;}
     public function snapshot():?array{return $this->snapshot;}
+    public function refreshResources():int {return $this->transaction($this->tree);}
     public function authoredRevision():int{return $this->revision;}
     public function nodeId(Node $node):string{return $this->state->id($node);}
     public function locationPath(string $id):?array{return $this->state->locationPaths[$id]??null;}
@@ -29,7 +30,7 @@ final class ReferenceSession
     public function compile():array{return $this->engine()->compile();}
     public function resolve():array {
         if(($this->snapshot['revision']??null)===$this->revision)return $this->snapshot;
-        $this->snapshot=$this->engine()->run();foreach($this->listeners as $listener)$listener($this->snapshot);return $this->snapshot;
+        $attempt=0;do{$this->snapshot=$this->engine()->run();$changed=array_filter($this->snapshot['diagnostics'],fn($d)=>$d['code']==='resource-changed');}while($changed&&$attempt++<2);foreach($this->listeners as $listener)$listener($this->snapshot);return $this->snapshot;
     }
     public function subscribe(callable $listener):\Closure {
         $id=count($this->listeners);while(isset($this->listeners[$id]))$id++;$this->listeners[$id]=$listener;
@@ -51,27 +52,52 @@ final class ReferenceSession
     public function fork():self {
         $next=clone $this;$next->state=clone $this->state;$next->state->ids=clone $this->state->ids;$next->listeners=[];return $next;
     }
-    public function bind(string|StructuralAddress $target,string $source):void {StructuralAddress::parse($source);$this->editBinding($target,[':ref'=>$source]);}
+    public function bind(string|StructuralAddress $target,string|array $source,bool $preferStableId=false):void {ReferenceSyntax::parse($source);$this->editBinding($target,[':ref'=>$source],$preferStableId);}
     public function unbind(string|StructuralAddress $target,mixed $replacement):void {$this->editBinding($target,$replacement);}
-    private function editBinding(string|StructuralAddress $target,mixed $replacement):void {
-        $index=new ReferenceIndex($this->tree,$this->state);$found=$index->locate(is_string($target)?StructuralAddress::parse($target):$target);$path=$found['path'];$node=$found['entry']['node'];
+    private function editBinding(string|StructuralAddress $target,mixed $replacement,bool $preferStableId=false):void {
+        $index=new ReferenceIndex($this->tree,$this->state);$found=$index->locate(is_string($target)?$index->selector(ReferenceSyntax::selector($target)):$target);$path=$found['path'];$node=$found['entry']['node'];
         $direct=count($path)===2&&$path[0]==='props'&&($node->kind===Node::ELEMENT||$node->kind===Node::RUNTIME&&in_array($node->name,['if','each','import','include'],true));
         $direct=$direct||count($path)===3&&array_slice($path,0,2)===['props','props']&&$node->kind===Node::RUNTIME&&in_array($node->name,['import','include'],true);
         if($node->kind===Node::VALUE||!in_array($path[0]??null,['props','value'],true)||(!$direct&&!(isset($this->options['isExpressionLocation'])&&($this->options['isExpressionLocation'])($node,$path))))throw new ReferenceException('not-bindable','Location cannot accept a reference.');
         for($i=1;$i<count($path);$i++){$parent=ReferenceTree::get($node,array_slice($path,0,$i));if($parent instanceof Node&&$parent->kind===Node::VALUE)throw new ReferenceException('not-bindable','Typed literals are opaque.');}
+        $identityNode=null;$identity=null;
+        if($preferStableId&&is_array($replacement)&&isset($replacement[':ref'])){
+            $parsed=ReferenceSyntax::parse($replacement[':ref']);
+            if(!isset($parsed['spec']['src'])&&$parsed['shape']==='single'){
+                $selected=$index->locate($index->selector($parsed['selections'][0]['selector'],$node,$path));
+                $identityNode=$selected['entry']['node'];$identity=$identityNode->semanticId??\Armes\Tree\SemanticIdentity::makeId();
+                $segments=$index->address($selected['entry'],$selected['path'],$selected['result']??null)->segments;
+                $suffix=array_slice($segments,count($selected['entry']['address']->segments));
+                if(isset($selected['output'])&&($suffix[0]['kind']??null)==='result')$suffix[0]['output']=$selected['output'];
+                $suffix=[...$suffix,...($selected['data']??[])];
+                $id=preg_match('/^[A-Za-z0-9_.-]+$/D',$identity)?$identity:'['.json_encode($identity,JSON_THROW_ON_ERROR).']';
+                $replacement=[':ref'=>'#'.$id.substr(ReferenceSyntax::compact(new StructuralAddress($suffix)),1)];
+            }
+        }
         $pairs=[];
-        $rewrite=function(Node $n)use(&$rewrite,$node,$path,$replacement,&$pairs):Node {
-            $next=ReferenceTree::map($n,$rewrite);if($n===$node)$next=ReferenceTree::set($next,$path,$replacement);$pairs[]=[$n,$next];return $next;
+        $rewrite=function(Node $n)use(&$rewrite,$node,$path,$replacement,$identityNode,$identity,&$pairs):Node {
+            $next=ReferenceTree::map($n,$rewrite);if($n===$identityNode)$next=$next->withSemanticId($identity);if($n===$node)$next=ReferenceTree::set($next,$path,$replacement);$pairs[]=[$n,$next];return $next;
         };
         $tree=$rewrite($this->tree);$key='document:'.$this->nodeId($node).':'.json_encode($path);
         $this->transaction($tree,$pairs);unset($this->state->pins[$key],$this->state->generatedPins[$key]);
     }
+    /** A structural preview. No loader or adapter is invoked and no session is changed. */
+    public function previewReferenceMigration():array {
+        $engine=$this->engine();$refs=$engine->compile();$updates=[];$changes=[];$skipped=[];
+        foreach($refs as $ref){$parsed=$ref->reference;if(!$parsed||$parsed['shape']!=='single'||$parsed['selections'][0]['selector']['syntax']!=='legacy')continue;
+            try{$after=ReferenceSyntax::compact($parsed['selections'][0]['selector']['address']);$spec=[...$parsed['spec'],'path'=>$after,'syntax'=>'compact'];$value=isset($spec['src'])?$spec:$after;$plan=$engine->plans[$ref->id];$updates[$this->nodeId($plan['owner'])][]=[$plan['path'],$value];$changes[]=['before'=>$parsed['spec']['path'],'after'=>$after];}
+            catch(ReferenceException $e){$skipped[]=$ref->provenance['authored'].': '.$e->getMessage();}
+        }
+        $rewrite=function(Node $n)use(&$rewrite,$updates):Node{$next=ReferenceTree::map($n,$rewrite);foreach($updates[$this->nodeId($n)]??[] as [$path,$value]){$slot=ReferenceTree::get($next,$path);$slot=$slot instanceof Node&&$slot->kind===Node::RUNTIME?Node::runtime('ref',[],[],$value,$slot->meta)->withSemanticId($slot->semanticId):[':ref'=>$value];$next=ReferenceTree::set($next,$path,$slot);}return $next;};
+        return ['tree'=>$rewrite($this->sourceTree()),'changes'=>$changes,'skipped'=>$skipped];
+    }
     public function duplicate(string|StructuralAddress $address):string {
-        $engine=$this->engine();$engine->compile();$found=$engine->index->locate(is_string($address)?StructuralAddress::parse($address):$address);
+        $engine=$this->engine();$engine->compile();$found=$engine->index->locate(is_string($address)?$engine->index->selector(ReferenceSyntax::selector($address)):$address);
         if($found['path']||isset($found['result']))throw new ReferenceException('not-structural','Only authored subtrees can be copied.');
         $original=$found['entry']['node'];$copies=[];
-        $copy=function(Node $node)use(&$copy,&$copies):Node{$next=ReferenceTree::map($node,$copy);$copies[$this->nodeId($node)]=$this->nodeId($next);return $next;};
-        $duplicate=$copy($original);$pairs=[];
+        $identityCopy=\Armes\Tree\SemanticIdentity::copy($original);
+        $pair=function(Node $a,Node $b)use(&$pair,&$copies){$copies[$this->nodeId($a)]=$this->nodeId($b);foreach(ReferenceTree::children($a) as $i=>$n)$pair($n,ReferenceTree::children($b)[$i]);};$pair($original,$identityCopy);
+        $duplicate=$identityCopy;$pairs=[];
         $rewrite=function(Node $n)use(&$rewrite,$original,$duplicate,&$pairs):Node {
             $next=ReferenceTree::map($n,$rewrite);
             $children=$n->kind===Node::LOGIC?$n->args:$n->children;
@@ -86,14 +112,17 @@ final class ReferenceSession
     public function sourceTree():Node {
         $engine=$this->engine();$refs=$engine->compile();$updates=[];
         foreach($refs as $ref) {
+            if($ref->reference&&(isset($ref->reference['spec']['src'])||$ref->reference['shape']!=='single'||($ref->reference['selections'][0]['selector']['anchor']??null)==='id'))continue;
             $pin=$this->state->pins[$ref->id]??null;if(!$pin)continue;
             if(($pin['stale']??false))throw new ReferenceException('unserializable-reference','Stale reference requires rebinding.');
             $entry=$engine->index->entries[$pin['node']]??null;if(!$entry)throw new ReferenceException('unserializable-reference','Referenced source was deleted.');
             if(isset($this->state->generatedPins[$ref->id])&&($this->snapshot['revision']??null)!==$this->revision)throw new ReferenceException('unserializable-reference','Evaluate the current revision before saving a generated selection.');
             if(($this->snapshot['revision']??null)===$this->revision&&array_filter($this->snapshot['diagnostics'],fn($d)=>$d['code']==='stale-reference'))throw new ReferenceException('unserializable-reference','Stale generated reference.');
-            $spelling=$ref->provenance['authored'];
-            try{$located=$engine->index->locate($ref->source);if($located['entry']['id']!==$pin['node']||$located['path']!==$pin['path']||($located['result']??null)!==($pin['result']??null))$spelling=(string)$engine->index->address($entry,$pin['path'],$pin['result']);}
-            catch(ReferenceException){$spelling=(string)$engine->index->address($entry,$pin['path'],$pin['result']);}
+            $spelling=is_string($ref->reference['spec']['path']??null)?$ref->reference['spec']['path']:$ref->provenance['authored'];
+            $segments=$engine->index->address($entry,$pin['path'],$pin['result'])->segments;foreach($segments as &$segment)if($segment['kind']==='result'&&isset($pin['output']))$segment['output']=$pin['output'];unset($segment);$normalized=new StructuralAddress([...$segments,...($pin['data']??[])]);
+            $normalized=($ref->reference['selections'][0]['selector']['syntax']??'legacy')==='compact'?ReferenceSyntax::compact($normalized):(string)$normalized;
+            try{$located=$engine->index->locate($ref->reference?$engine->index->selector($ref->reference['selections'][0]['selector'],$engine->plans[$ref->id]['owner'],$engine->plans[$ref->id]['path']):$ref->source);if($located['entry']['id']!==$pin['node']||$located['path']!==$pin['path']||($located['result']??null)!==($pin['result']??null))$spelling=$normalized;}
+            catch(ReferenceException){$spelling=$normalized;}
             $plan=$engine->plans[$ref->id];$updates[$this->nodeId($plan['owner'])][]=[$plan['path'],$spelling];
         }
         $rewrite=function(Node $node)use(&$rewrite,$updates):Node {
